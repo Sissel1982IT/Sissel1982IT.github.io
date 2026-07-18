@@ -475,7 +475,169 @@
         </div>
     </footer>
 
-  
+    <script>
+        // Die vollständigen 15 PowerPoint-relevanten Fragen als Standard geladen
+        const defaultQuestions = [
+            {
+                "question": "Was unterscheidet die physische von der logischen Netzwerktopologie laut Definition der Präsentation?",
+                "options": [
+                    "Die physische beschreibt die tatsächliche Verkabelung und Hardware-Anordnung; die logische den genauen Weg des Datenflusses und die Protokolle.",
+                    "Die physische Topologie existiert nur in der Theorie; die logische Topologie beschreibt die echte Hardware.",
+                    "Es gibt keinen Unterschied, beide Begriffe beschreiben exakt dieselbe Netzwerkkonfiguration.",
+                    "Die physische Topologie wird ausschließlich für Funknetzwerke genutzt; die logische nur für Kupferkabel."
+                ],
+                "correctAnswer": 0,
+                "explanation": "Laut Folien beschreibt die physische Topologie Aspekte wie das geometrische Schema, Kabel, Anschlüsse und Standorte. Die logische Topologie erklärt dagegen den Datenfluss von Station zu Station, den Datenweg und die verwendeten Protokolle."
+            },
+            {
+                "question": "Welche Topologie stellt die einfachste physische Struktur dar, bei der genau zwei Stationen direkt miteinander verbunden sind?",
+                "options": [
+                    "Bus-Topologie",
+                    "Point to Point Topology (Punkt-zu-Punkt)",
+                    "Stern-Topologie",
+                    "Ring-Topologie"
+                ],
+                "correctAnswer": 1,
+                "explanation": "Die Point-to-Point-Topologie verbindet genau zwei Stationen (Knoten) direkt über ein einzelnes Übertragungsmedium miteinander, wie auf dem entsprechenden PowerPoint-Diagramm zu sehen ist."
+            },
+            {
+                "question": "Wie heißen in einer klassischen Bus-Topologie die Abzweigleitungen und die Anschlussstücke am Hauptkabel (Main Cable)?",
+                "options": [
+                    "Bridge und Bridge-Line",
+                    "Uplink und Port",
+                    "Dropline und Tap",
+                    "Loopback und Interface"
+                ],
+                "correctAnswer": 2,
+                "explanation": "Das Bus-Diagramm zeigt es deutlich: Das Hauptkabel besitzt Anschlussstücke (Taps), von denen die Stichleitungen (Droplines) direkt zu den einzelnen Stationen abzweigen."
+            },
+            {
+                "question": "Welche physischen Komponenten werden auf der Folie 'The parts of the bus topology' für den Anschluss an die Netzwerkkarte gezeigt?",
+                "options": [
+                    "RJ45-Stecker, Patchkabel und Switch-Port",
+                    "SFP-Modul, Glasfaserkabel und Medienkonverter",
+                    "BNC connector (BNC-Stecker), T connector (T-Stück) und Terminator (Abschlusswiderstand)"
+                ],
+                "correctAnswer": 2,
+                "explanation": "Die Detailzeichnung der Bus-Hardware zeigt den BNC-Stecker, das T-Stück (T-Connector) zum direkten Aufstecken auf die Netzwerkkarte (Network Card) sowie den Abschlusswiderstand (Terminator)."
+            },
+            {
+                "question": "Wie groß ist ein Frame im 'Token-Bus-Frame-Format' laut Präsentation maximal und aus wie vielen Feldern besteht er?",
+                "options": [
+                    "1518 Byte und 4 Felder",
+                    "64 Byte und 5 Felder",
+                    "8202 Byte und 8 Felder",
+                    "9000 Byte (Jumbo Frame) und 10 Felder"
+                ],
+                "correctAnswer": 2,
+                "explanation": "Auf der Folie zum Token-Bus-Frame steht geschrieben: 'Die Gesamtgröße des Frames beträgt 8202 Byte, und der Frame besteht aus 8 Feldern.'"
+            },
+            {
+                "question": "Welches Feld im Token-Bus-Frame-Format besitzt eine variable Größe von 0 bis 8182 Bytes?",
+                "options": [
+                    "Preamble",
+                    "Destination address",
+                    "Data (Payload)",
+                    "Checksum"
+                ],
+                "correctAnswer": 2,
+                "explanation": "Das Nutzdatenfeld 'Data (Payload)' ist flexibel und belegt im Frame-Format eine variable Größe von 0 bis maximal 8182 Bytes."
+            },
+            {
+                "question": "Was beschreibt das Prinzip der gezeigten 'Token Bus' Topologie am besten?",
+                "options": [
+                    "Eine physische Ring-Topologie, auf der logisch ein Bus-Verfahren läuft.",
+                    "Eine physische Bus-Topologie, auf der logisch ein Ring-Zugriffsverfahren (Token-Passing) simuliert wird.",
+                    "Ein reines WLAN-Mesh-Netzwerk ohne Kabelverbindungen.",
+                    "Zwei redundante Bus-Leitungen, die im Gegenverkehr betrieben werden"
+                ],
+                "correctAnswer": 1,
+                "explanation": "Beim Token Bus sind alle Stationen physisch an einem gemeinsamen Bus (Shared Medium) angeschlossen. Logisch wird das Token jedoch nacheinander im Kreis (als Ring) von Station zu Station gereicht."
+            },
+            {
+                "question": "Was unterscheidet die 'Dual Ring Topology' (Doppelring) bezüglich des Datenflusses von einer einfachen Ring-Topologie?",
+                "options": [
+                    "Die Daten fließen auf beiden Ringen immer in exakt dieselbe Richtung.",
+                    "Die Daten fließen auf den zwei konzentrischen Ringen in entgegengesetzte Richtungen (Gegenlauf).",
+                    "Daten fließen nur auf dem äußeren Ring, während der innere Ring ausschließlich Strom transportiert.",
+                    "Der Datenfluss wird komplett abgeschaltet, sobald mehr als drei Stationen aktiv sind."
+                ],
+                "correctAnswer": 1,
+                "explanation": "Das Diagramm der Dual Ring Topology zeigt zwei Ringe mit entgegengesetzten Richtungspfeilen (Direction of flow). Dies dient der Ausfallsicherheit, da bei einem Kabelbruch ein Loopback gebildet werden kann."
+            },
+            {
+                "question": "Welche Hardware-Komponente fungiert auf dem Diagramm der 'Star Topology' als zentraler Verteiler für die Stationen?",
+                "options": [
+                    "Ein passiver Hub",
+                    "Ein Switch",
+                    "Ein Terminator",
+                    "Ein Gateway"
+                ],
+                "correctAnswer": 1,
+                "explanation": "Im Zentrum des gezeigten Stern-Diagramms sitzt ein zentraler Switch, an den alle Endgeräte sternförmig über eigene Punkt-zu-Punkt-Leitungen angebunden sind."
+            },
+            {
+                "question": "Welche hierarchische Struktur bildet eine klassische physische Baum-Topologie (Tree Topology) ab?",
+                "options": [
+                    "Eine Kaskade aus Switches oder Routern, die sich von einer zentralen Wurzel nach unten hin verzweigt.",
+                    "Ein geschlossener Kreis, bei dem alle Geräte gleichberechtigt sind.",
+                    "Ein langes Koaxialkabel, das an beiden Enden mit BNC-Widerständen terminiert ist.",
+                    "Eine vollvermaschte Struktur, bei der jeder Switch mit jedem anderen Switch gekoppelt ist."
+                ],
+                "correctAnswer": 0,
+                "explanation": "Eine Baum-Topologie ist hierarchisch aufgebaut. An der Spitze steht eine Wurzel (z.B. ein Core-Switch/Router), die sich über Etagen-Switches bis hinunter zu den Endgeräten (Stations) verzweigt."
+            },
+            {
+                "question": "Welche drei IP-Subnetze (Netzadressen) werden im detaillierten Praxisbeispiel der Baum-Topologie (Folie 12) gezeigt?",
+                "options": [
+                    "10.0.0.0/8, 172.16.0.0/12 und 192.168.0.0/16",
+                    "192.168.1.0/24 (Server room), 192.168.17.0/24 (Developers Office) und 192.168.18.0/24 (Testers Office)"
+                ],
+                "correctAnswer": 1,
+                "explanation": "In der detaillierten Netzwerk-Baum-Grafik sind genau diese drei Subnetze eingezeichnet: Das Entwickler-Büro (.17.0/24), das Tester-Büro (.18.0/24) und der geschützte Serverraum (.1.0/24)."
+            },
+            {
+                "question": "Wie werden im kabellosen/kabelgebundenen Tree-Beispiel (Folie 13) zwei geografisch getrennte Switches drahtlos gekoppelt?",
+                "options": [
+                    "Über ein unterirdisches Glasfaserkabel",
+                    "Über eine drahtlose Funkbrücke ('Bridge') zwischen zwei Wi-Fi Access Points"
+                ],
+                "correctAnswer": 1,
+                "explanation": "Das Diagramm zeigt eine gestrichelte Funkstrecke namens 'Bridge' zwischen zwei Wi-Fi Access Points, um die beiden kabelgebundenen Switch-Infrastrukturen drahtlos miteinander zu verbinden."
+            },
+            {
+                "question": "Welche zwei Ausprägungen der Maschen-Topologie (Mesh Topology) werden in der Präsentation direkt gegenübergestellt?",
+                "options": [
+                    "Single Mesh und Multi Mesh",
+                    "Physisches Mesh und Logisches Mesh",
+                    "Full Mesh (vollvermascht) und Partial Mesh (teilvermascht)"
+                ],
+                "correctAnswer": 2,
+                "explanation": "Die Folie stellt 'Full Mesh' (alle 6 Knoten sind mit jedem anderen Knoten direkt verbunden) und 'Partial Mesh' (Knoten sind nur teilweise redundant verbunden, um Kosten zu sparen) bildlich gegenüber."
+            },
+            {
+                "question": "Wie viele physische Leitungen (Kabel) werden für ein vollmaschiges Netzwerk mit n = 6 Endgeräten benötigt, wie es auf der Mesh-Folie abgebildet ist?",
+                "options": [
+                    "6 Leitungen",
+                    "12 Leitungen",
+                    "15 Leitungen"
+                ],
+                "correctAnswer": 2,
+                "explanation": "Die Formel zur Berechnung der Leitungen lautet: n(n - 1) / 2. Für 6 Endgeräte im Bild ergibt dies: 6(6 - 1) / 2 = 15 Leitungen."
+            },
+            {
+                "question": "Welcher der folgenden Aspekte gehört laut Definition der Präsentation zur LOGISCHEN Topologie?",
+                "options": [
+                    "Der Weg der Daten im Netzwerk und welche Protokolle verwendet werden",
+                    "Die Arten und die Anzahl der verwendeten Netzwerkadapter",
+                    "Der genaue physische Standort der Geräte",
+                    "Die Art der Kabel und die Kabelanschlüsse"
+                ],
+                "correctAnswer": 0,
+                "explanation": "Laut Folien erklärt die logische Topologie, wie Daten übertragen werden, welchen Weg sie nehmen und welche Protokolle verwendet werden. Kabel, Anschlüsse und Standorte gehören zur physischen Topologie."
+            }
+        ];
+
         // Systemvariablen
         let questions = [...defaultQuestions];
         let quizQuestions = []; // Shuffled Subset

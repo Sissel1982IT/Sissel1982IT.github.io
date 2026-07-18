@@ -6,6 +6,8 @@
     <title>Interaktives Quiz mit JSON-Schnittstelle</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- JSZIP ZUM OFFLINE-ENTPACKEN VON DISKETTEN-ARCHIVEN IM BROWSER -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=VT323&display=swap');
         
@@ -238,7 +240,7 @@
                         Quiz starten <i class="fas fa-arrow-right ml-2"></i>
                     </button>
                     <button id="btn-toggle-import" onclick="toggleImportPanel(true)" class="flex-1 bg-slate-700 hover:bg-slate-600 text-slate-200 font-semibold px-6 py-3.5 rounded-xl border border-slate-600 transition duration-200">
-                        <i class="fas fa-file-import mr-2"></i> JSON / Text laden
+                        <i class="fas fa-file-import mr-2"></i> JSON / Diskette laden
                     </button>
                 </div>
             </div>
@@ -257,9 +259,9 @@
 
                 <!-- Dateiupload-Bereich / DISKETTE -->
                 <div class="space-y-2">
-                    <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider" id="label-upload">Option A: Diskette einschieben (JSON-Datei laden)</label>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider" id="label-upload">Option A: Diskette einschieben (.JSON oder ZIP-Diskette laden)</label>
                     <div id="drop-zone" class="border-2 border-dashed border-slate-700 hover:border-blue-500 rounded-xl p-6 text-center cursor-pointer transition relative group bg-slate-900/40 overflow-hidden flex flex-col justify-center items-center min-h-[190px]">
-                        <input type="file" id="file-input" accept=".json" class="absolute inset-0 opacity-0 cursor-pointer z-20" onchange="handleFileSelect(event)">
+                        <input type="file" id="file-input" accept=".json,.zip" class="absolute inset-0 opacity-0 cursor-pointer z-20" onchange="handleFileSelect(event)">
                         
                         <!-- DYNAMISCHES RETRO-DISKETTEN-DESIGN -->
                         <div id="floppy-drive-ui" class="hidden flex flex-col items-center justify-center space-y-2 pointer-events-none transition-all duration-300 z-10">
@@ -279,7 +281,7 @@
                                 </div>
                                 <div class="w-full bg-slate-100 rounded-sm p-1.5 flex flex-col justify-end space-y-1 relative">
                                     <div class="w-full h-1 bg-red-600"></div>
-                                    <div class="text-[6px] text-slate-800 font-bold tracking-tight text-center truncate font-mono" id="floppy-label-text">NETZWERK.JSON</div>
+                                    <div class="text-[6px] text-slate-800 font-bold tracking-tight text-center truncate font-mono" id="floppy-label-text">DISKETTE.ZIP</div>
                                     <div class="h-3 w-1/3 bg-slate-300 self-end rounded-xs"></div>
                                 </div>
                             </div>
@@ -287,9 +289,9 @@
 
                         <!-- Modernes Design -->
                         <div class="space-y-2 pointer-events-none z-10" id="modern-upload-ui">
-                            <i class="fas fa-file-code text-3xl text-slate-500 group-hover:text-blue-400 transition" id="upload-icon"></i>
-                            <p class="text-sm font-semibold text-slate-300" id="upload-text">JSON-Datei auswählen oder hierher ziehen</p>
-                            <p class="text-xs text-slate-500" id="upload-subtext">Klicke hier, um deinen Desktop-Ordner zu durchsuchen</p>
+                            <i class="fas fa-file-archive text-3xl text-slate-500 group-hover:text-blue-400 transition" id="upload-icon"></i>
+                            <p class="text-sm font-semibold text-slate-300" id="upload-text">JSON oder ZIP-Diskette hierher ziehen</p>
+                            <p class="text-xs text-slate-500" id="upload-subtext">Klicke hier, um deine Ordner am Desktop zu durchsuchen</p>
                         </div>
                     </div>
                 </div>
@@ -465,7 +467,7 @@
     <!-- Footer -->
     <footer class="bg-slate-800/40 border-t border-slate-800 py-4 text-center text-xs text-slate-500">
         <div class="max-w-4xl mx-auto px-4">
-            <p id="footer-text">© 2026 IT-Umschulungs-Coach. Entwickelt für dynamisches und offline-fähiges Lernen am Desktop, von Alexander Rahn.</p>
+            <p id="footer-text">© 2026 IT-Umschulungs-Coach. Entwickelt für dynamisches und offline-fähiges Lernen via ZIP-Diskette am Desktop, von Alexander Rahn.</p>
         </div>
     </footer>
 
@@ -878,8 +880,9 @@ Erklärung: Da jedes Endgerät ein exklusives Kabel zum Switch besitzt, betrifft
         }
 
         function handleFileRead(file) {
-            if (!file.name.endsWith('.json')) {
-                showFeedback("Fehler: Bitte wähle eine echte *.json Datei aus.", "error");
+            const isZip = file.name.endsWith('.zip');
+            if (!file.name.endsWith('.json') && !isZip) {
+                showFeedback("Fehler: Bitte wähle eine *.json oder eine *.zip Datei aus.", "error");
                 return;
             }
 
@@ -889,27 +892,121 @@ Erklärung: Da jedes Endgerät ein exklusives Kabel zum Switch besitzt, betrifft
                 const led = document.getElementById('drive-led');
                 const label = document.getElementById('floppy-label-text');
                 
-                label.innerText = file.name.toUpperCase();
+                label.innerText = file.name.toUpperCase().substring(0, 11);
                 floppy.classList.add('floppy-inserted');
                 led.classList.add('led-active');
             }
 
             const reader = new FileReader();
+            
+            if (isZip) {
+                reader.readAsArrayBuffer(file);
+            } else {
+                reader.readAsText(file);
+            }
+
             reader.onload = function(e) {
-                setTimeout(() => {
+                setTimeout(async () => {
                     try {
-                        const content = e.target.result;
-                        const parsed = JSON.parse(content);
-                        
-                        if (!Array.isArray(parsed)) {
-                            throw new Error("Das JSON-Format muss ein Array ([...]) von Objekten sein.");
+                        let importedList = [];
+                        if (isZip) {
+                            if (typeof JSZip === 'undefined') {
+                                throw new Error("Ladefehler: JSZip-Bibliothek konnte nicht geladen werden.");
+                            }
+                            const zipData = e.target.result;
+                            const zip = await JSZip.loadAsync(zipData);
+                            let jsonContent = null;
+                            const imageMap = {};
+
+                            // Durchlaufe das ZIP-Archiv und lese alle JSON- und Bilddateien aus
+                            for (const [path, zipEntry] of Object.entries(zip.files)) {
+                                if (zipEntry.dir) continue;
+
+                                const cleanPath = path.replace(/^\.\//, ""); // Bereinigt "./pics/test.png" zu "pics/test.png"
+
+                                if (cleanPath.endsWith('.json')) {
+                                    const text = await zipEntry.async("string");
+                                    jsonContent = JSON.parse(text);
+                                } else if (/\.(png|jpe?g|gif|svg)$/i.test(cleanPath)) {
+                                    const blob = await zipEntry.async("blob");
+                                    const objectURL = URL.createObjectURL(blob);
+                                    imageMap[cleanPath] = objectURL;
+                                    
+                                    // Fallback: Auch nur den nackten Dateinamen registrieren (z.B. "Test.png" statt "pics/Test.png")
+                                    const fileNameOnly = cleanPath.split('/').pop();
+                                    imageMap[fileNameOnly] = objectURL;
+                                }
+                            }
+
+                            if (!jsonContent) {
+                                throw new Error("Keine .json-Datei im ZIP-Archiv gefunden!");
+                            }
+
+                            if (!Array.isArray(jsonContent)) {
+                                throw new Error("Das JSON-Format im ZIP muss ein Array ([...]) sein.");
+                            }
+
+                            // Pfade im JSON auflösen und die Fragen konvertieren
+                            jsonContent.forEach((item, index) => {
+                                if (!item.question || !Array.isArray(item.options) || item.options.length < 2 || item.correctAnswer === undefined) {
+                                    throw new Error(`Eintrag bei Index ${index} im ZIP-JSON ist unvollständig.`);
+                                }
+                                
+                                const importedItem = {
+                                    question: item.question,
+                                    options: item.options,
+                                    correctAnswer: parseInt(item.correctAnswer),
+                                    explanation: item.explanation || "Keine zusätzliche Erklärung.",
+                                    image: null
+                                };
+
+                                if (item.image) {
+                                    const cleanImgPath = item.image.replace(/^\.\//, "");
+                                    const fileNameOnly = cleanImgPath.split('/').pop();
+                                    
+                                    // Zuerst nach dem genauen ZIP-Pfad suchen, sonst nach dem reinen Dateinamen
+                                    if (imageMap[cleanImgPath]) {
+                                        importedItem.image = imageMap[cleanImgPath];
+                                    } else if (imageMap[fileNameOnly]) {
+                                        importedItem.image = imageMap[fileNameOnly];
+                                    } else {
+                                        importedItem.image = item.image; // Fallback auf Originalwert (z.B. Online-URLs)
+                                    }
+                                }
+                                importedList.push(importedItem);
+                            });
+
+                            showFeedback(`"${file.name}" erfolgreich entpackt! ${importedList.length} Fragen & ${Object.keys(imageMap).length} Bilder geladen.`, "success");
+
+                        } else {
+                            // Klassischer Single-JSON Import
+                            const content = e.target.result;
+                            const parsed = JSON.parse(content);
+                            
+                            if (!Array.isArray(parsed)) {
+                                throw new Error("Das JSON-Format muss ein Array ([...]) von Objekten sein.");
+                            }
+
+                            parsed.forEach((item, index) => {
+                                if (!item.question || !Array.isArray(item.options) || item.options.length < 2 || item.correctAnswer === undefined) {
+                                    throw new Error(`Eintrag bei Index ${index} besitzt unvollständige Felder.`);
+                                }
+                                importedList.push({
+                                    question: item.question,
+                                    options: item.options,
+                                    correctAnswer: parseInt(item.correctAnswer),
+                                    explanation: item.explanation || "Keine zusätzliche Erklärung angegeben.",
+                                    image: item.image || null
+                                });
+                            });
+
+                            document.getElementById('import-textarea').value = content;
+                            showFeedback(`"${file.name}" erfolgreich eingelesen! Drücke jetzt auf "Speichern & Aktivieren"`, "success");
                         }
 
-                        switchImportTab('json', true);
-                        document.getElementById('import-textarea').value = content;
-                        
-                        showFeedback(`"${file.name}" erfolgreich eingelesen! Drücke jetzt auf "Speichern & Aktivieren"`, "success");
-                        
+                        // Temp-Speicher für Aktivierungs-Button
+                        window.tempImportedList = importedList;
+
                         if (currentTheme === 'modern') {
                             document.getElementById('upload-icon').className = "fas fa-file-signature text-3xl text-emerald-500";
                             document.getElementById('upload-text').innerText = `Datei geladen: ${file.name}`;
@@ -924,7 +1021,6 @@ Erklärung: Da jedes Endgerät ein exklusives Kabel zum Switch besitzt, betrifft
                     }
                 }, currentTheme === 'retro' ? 1200 : 50); // Simulierter Retro-Read
             };
-            reader.readAsText(file);
         }
 
         function resetFloppyAnimation() {
@@ -935,8 +1031,9 @@ Erklärung: Da jedes Endgerät ein exklusives Kabel zum Switch besitzt, betrifft
             floppy.classList.remove('floppy-inserted');
             led.classList.remove('led-active');
             led.style.backgroundColor = '';
-            label.innerText = "NETZWERK.JSON";
+            label.innerText = "DISKETTE.ZIP";
             document.getElementById('file-input').value = "";
+            window.tempImportedList = null;
         }
 
         // Fragen als JSON-Datei herunterladen (Backup auf den Desktop)
@@ -968,8 +1065,8 @@ Erklärung: Da jedes Endgerät ein exklusives Kabel zum Switch besitzt, betrifft
                 hideFeedback();
                 
                 if (currentTheme === 'modern') {
-                    document.getElementById('upload-icon').className = "fas fa-file-code text-3xl text-slate-500";
-                    document.getElementById('upload-text').innerText = "JSON-Datei auswählen oder hierher ziehen";
+                    document.getElementById('upload-icon').className = "fas fa-file-archive text-3xl text-slate-500";
+                    document.getElementById('upload-text').innerText = "JSON oder ZIP-Diskette hierher ziehen";
                     document.getElementById('file-input').value = "";
                 } else {
                     resetFloppyAnimation();
@@ -1051,88 +1148,95 @@ Erklärung: Da jedes Endgerät ein exklusives Kabel zum Switch besitzt, betrifft
 
         // Einleseprozess starten und parsen
         function processImport() {
-            const rawInput = document.getElementById('import-textarea').value.trim();
-            if (!rawInput) {
-                showFeedback("Bitte gib Text oder JSON ein oder wähle eine Datei aus.", "error");
-                return;
-            }
+            if (window.tempImportedList && window.tempImportedList.length > 0) {
+                // ZIP- oder Drag-and-Drop Datei aktivieren
+                questions = window.tempImportedList;
+                window.tempImportedList = null; // Reset Temp
+            } else {
+                // Fallback: Textfeld auswerten
+                const rawInput = document.getElementById('import-textarea').value.trim();
+                if (!rawInput) {
+                    showFeedback("Bitte gib Text oder JSON ein oder wähle eine Datei aus.", "error");
+                    return;
+                }
 
-            let importedList = [];
+                let importedList = [];
 
-            if (activeImportTab === 'text') {
-                try {
-                    const questionBlocks = rawInput.split(/---+\s*/);
-                    questionBlocks.forEach((block, blockIdx) => {
-                        const cleanBlock = block.trim();
-                        if (!cleanBlock) return;
+                if (activeImportTab === 'text') {
+                    try {
+                        const questionBlocks = rawInput.split(/---+\s*/);
+                        questionBlocks.forEach((block, blockIdx) => {
+                            const cleanBlock = block.trim();
+                            if (!cleanBlock) return;
 
-                        const lines = cleanBlock.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-                        let question = "";
-                        let options = [];
-                        let correctAnswer = null;
-                        let explanation = "";
+                            const lines = cleanBlock.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+                            let question = "";
+                            let options = [];
+                            let correctAnswer = null;
+                            let explanation = "";
 
-                        lines.forEach(line => {
-                            if (line.match(/^(Frage|Q):/i)) {
-                                question = line.replace(/^(Frage|Q):\s*/i, "");
-                            } else if (line.match(/^[A-D]\)/i)) {
-                                options.push(line.replace(/^[A-D]\)\s*/i, ""));
-                            } else if (line.match(/^(Antwort|Richtig):/i)) {
-                                const ansLetter = line.replace(/^(Antwort|Richtig):\s*/i, "").trim().toUpperCase();
-                                if (ansLetter === 'A') correctAnswer = 0;
-                                else if (ansLetter === 'B') correctAnswer = 1;
-                                else if (ansLetter === 'C') correctAnswer = 2;
-                                else if (ansLetter === 'D') correctAnswer = 3;
-                            } else if (line.match(/^(Erklärung|Explanation):/i)) {
-                                explanation = line.replace(/^(Erklärung|Explanation):\s*/i, "");
+                            lines.forEach(line => {
+                                if (line.match(/^(Frage|Q):/i)) {
+                                    question = line.replace(/^(Frage|Q):\s*/i, "");
+                                } else if (line.match(/^[A-D]\)/i)) {
+                                    options.push(line.replace(/^[A-D]\)\s*/i, ""));
+                                } else if (line.match(/^(Antwort|Richtig):/i)) {
+                                    const ansLetter = line.replace(/^(Antwort|Richtig):\s*/i, "").trim().toUpperCase();
+                                    if (ansLetter === 'A') correctAnswer = 0;
+                                    else if (ansLetter === 'B') correctAnswer = 1;
+                                    else if (ansLetter === 'C') correctAnswer = 2;
+                                    else if (ansLetter === 'D') correctAnswer = 3;
+                                } else if (line.match(/^(Erklärung|Explanation):/i)) {
+                                    explanation = line.replace(/^(Erklärung|Explanation):\s*/i, "");
+                                }
+                            });
+
+                            if (question && options.length >= 2 && correctAnswer !== null) {
+                                importedList.push({
+                                    question,
+                                    options,
+                                    correctAnswer,
+                                    explanation: explanation || "Keine zusätzliche Erklärung angegeben."
+                                });
+                            } else {
+                                throw new Error(`Strukturfehler bei Frage ${blockIdx + 1}. Bitte überprüfe das Format.`);
                             }
                         });
-
-                        if (question && options.length >= 2 && correctAnswer !== null) {
-                            importedList.push({
-                                question,
-                                options,
-                                correctAnswer,
-                                explanation: explanation || "Keine zusätzliche Erklärung angegeben."
-                            });
-                        } else {
-                            throw new Error(`Strukturfehler bei Frage ${blockIdx + 1}. Bitte überprüfe das Format.`);
-                        }
-                    });
-                } catch (e) {
-                    showFeedback(e.message, "error");
-                    return;
-                }
-            } else {
-                try {
-                    const parsed = JSON.parse(rawInput);
-                    if (!Array.isArray(parsed)) {
-                        throw new Error("Das JSON-Format muss ein Array ([...]) von Objekten sein.");
+                    } catch (e) {
+                        showFeedback(e.message, "error");
+                        return;
                     }
+                } else {
+                    try {
+                        const parsed = JSON.parse(rawInput);
+                        if (!Array.isArray(parsed)) {
+                            throw new Error("Das JSON-Format muss ein Array ([...]) von Objekten sein.");
+                        }
 
-                    parsed.forEach((item, index) => {
-                        if (!item.question || !Array.isArray(item.options) || item.options.length < 2 || item.correctAnswer === undefined) {
-                            throw new Error(`Eintrag bei Index ${index} besitzt unvollständige Felder.`);
-                        }
-                        const ans = parseInt(item.correctAnswer);
-                        if (isNaN(ans) || ans < 0 || ans >= item.options.length) {
-                            throw new Error(`Eintrag bei Index ${index} hat einen ungültigen Antwort-Index.`);
-                        }
-                        importedList.push({
-                            question: item.question,
-                            options: item.options,
-                            correctAnswer: ans,
-                            explanation: item.explanation || "Keine zusätzliche Erklärung angegeben.",
-                            image: item.image || null
+                        parsed.forEach((item, index) => {
+                            if (!item.question || !Array.isArray(item.options) || item.options.length < 2 || item.correctAnswer === undefined) {
+                                throw new Error(`Eintrag bei Index ${index} besitzt unvollständige Felder.`);
+                            }
+                            const ans = parseInt(item.correctAnswer);
+                            if (isNaN(ans) || ans < 0 || ans >= item.options.length) {
+                                throw new Error(`Eintrag bei Index ${index} hat einen ungültigen Antwort-Index.`);
+                            }
+                            importedList.push({
+                                question: item.question,
+                                options: item.options,
+                                correctAnswer: ans,
+                                explanation: item.explanation || "Keine zusätzliche Erklärung angegeben.",
+                                image: item.image || null
+                            });
                         });
-                    });
-                } catch (e) {
-                    showFeedback(`JSON-Fehler: ${e.message}`, "error");
-                    return;
+                    } catch (e) {
+                        showFeedback(`JSON-Fehler: ${e.message}`, "error");
+                        return;
+                    }
                 }
+                questions = importedList;
             }
 
-            questions = importedList;
             updateLoadedCount();
             document.getElementById('quiz-mode-badge').innerText = "Eigenes Set";
             

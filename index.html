@@ -3,65 +3,1610 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IT-Klasse 07/2026 - Discord Server</title>
+    <title>Interaktives Quiz mit JSON-Schnittstelle</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=VT323&display=swap');
+        
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #1a1c1e;
-            color: #f0f2f5;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }  
-        .card {
-            background-color: #2b2d31;
-            padding: 2.5rem;
-            border-radius: 12px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
-            text-align: center;
-            max-width: 400px;
-            width: 90%;
-            border: 1px solid #3f4248;
+            font-family: 'Inter', sans-serif;
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
-        h1 {
-            font-size: 1.8rem;
-            margin-bottom: 0.5rem;
-            color: #fff;
+
+        /* Lineares Herunterzählen des Balkens für flüssige Bewegungen */
+        .linear-timer {
+            transition: width 1s linear;
         }
-        p {
-            color: #b5bac1;
-            font-size: 0.95rem;
-            line-height: 1.5;
-            margin-bottom: 2rem;
+
+        /* RETRO WINDOWS 95 OVERRIDES */
+        .retro-mode {
+            background-color: #008080 !important; /* Classic Windows 95 Teal */
+            color: #000000 !important;
+            font-family: 'Courier New', Courier, monospace !important;
         }
-        .btn {
-            display: inline-block;
-            background-color: #5865F2; /* Discord Blau */
-            color: white;
-            text-decoration: none;
-            padding: 0.8rem 2rem;
-            border-radius: 5px;
+
+        .retro-mode #quiz-card, 
+        .retro-mode header,
+        .retro-mode footer {
+            background-color: #c0c0c0 !important;
+            border: 3px double #ffffff !important;
+            box-shadow: inset -1.5px -1.5px #0a0a0a, inset 1.5px 1.5px #dfdfdf, 1.5px 1.5px #0a0a0a, -1.5px -1.5px #dfdfdf !important;
+            color: #000000 !important;
+            border-radius: 0px !important;
+        }
+
+        .retro-mode header {
+            border-bottom: 3px solid #808080 !important;
+        }
+
+        .retro-mode button, 
+        .retro-mode select {
+            background-color: #c0c0c0 !important;
+            color: #000000 !important;
+            border-radius: 0px !important;
+            border: 2px solid !important;
+            border-color: #ffffff #808080 #808080 #ffffff !important;
+            font-weight: bold !important;
+            box-shadow: none !important;
+            transform: none !important;
+        }
+
+        .retro-mode button:active:not(:disabled) {
+            border-color: #808080 #ffffff #ffffff #808080 !important;
+            padding-top: 2px;
+            padding-left: 2px;
+        }
+
+        .retro-mode button:disabled {
+            color: #808080 !important;
+            border-color: #ffffff #808080 #808080 #ffffff !important;
+            cursor: not-allowed !important;
+        }
+
+        .retro-mode .text-white,
+        .retro-mode .text-slate-100,
+        .retro-mode .text-slate-200,
+        .retro-mode .text-slate-300 {
+            color: #000000 !important;
+        }
+
+        .retro-mode .text-blue-400,
+        .retro-mode .text-emerald-500,
+        .retro-mode .text-emerald-400 {
+            color: #000080 !important; /* Win95 Dark Blue */
             font-weight: bold;
-            transition: background-color 0.2s, transform 0.1s;
         }
-        .btn:hover {
-            background-color: #4752C4;
+
+        .retro-mode .bg-slate-900,
+        .retro-mode .bg-slate-900\/40,
+        .retro-mode .bg-slate-900\/50,
+        .retro-mode .bg-slate-900\/60 {
+            background-color: #ffffff !important;
+            border: 2px solid #808080 !important;
+            color: #000000 !important;
+            border-radius: 0px !important;
+            box-shadow: inset 1px 1px #0a0a0a !important;
         }
-        .btn:active {
-            transform: scale(0.98);
+
+        .retro-mode textarea {
+            background-color: #ffffff !important;
+            color: #000000 !important;
+            font-family: 'Courier New', Courier, monospace !important;
+            border-radius: 0px !important;
+        }
+
+        /* Retro CRT Monitor für Grafik-Box */
+        .retro-mode #visual-container {
+            background-color: #051405 !important;
+            border: 4px solid #808080 !important;
+            box-shadow: inset 3px 3px #000000 !important;
+            border-radius: 0px !important;
+        }
+
+        /* 3.5" Diskette Animationen */
+        #floppy-disk {
+            transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.5s ease;
+        }
+        .floppy-inserted {
+            transform: translateY(110px) scale(0.7) rotateX(15deg);
+            opacity: 0.1;
+            pointer-events: none;
+        }
+
+        /* LED Indicator */
+        .led-active {
+            animation: led-blink 0.2s infinite alternate;
+        }
+        @keyframes led-blink {
+            0% { background-color: #4ade80; box-shadow: 0 0 2px #4ade80; }
+            100% { background-color: #166534; box-shadow: 0 0 8px #22c55e; }
         }
     </style>
 </head>
-<body>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col justify-between">
 
-    <div class="card">
-        <h1>IT-Klasse 07/2026</h1>
-        <p>Willkommen im zentralen Speicherort für unsere Umschulung. Hier findest du alle Lernfelder, den Materialaustausch und den Live-Countdown bis zu den Ferien!</p>
-        <!-- HIER DEINEN DISCORD-LINK EINTRAGEN -->
-        <a href="https://discord.gg/JqA3VRnNaQ" target="_blank" class="btn">Server beitreten</a>
+    <!-- Header -->
+    <header class="bg-slate-800 border-b border-slate-700 py-4 px-6 shadow-md transition-all duration-300">
+        <div class="max-w-4xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div class="flex items-center space-x-3">
+                <div class="bg-blue-600 p-2 rounded-lg text-white font-bold" id="header-logo-container">
+                    <i class="fas fa-network-wired text-xl" id="header-icon"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg tracking-wide" id="app-title">IT-Prüfungsvorbereitung</h1>
+                    <p class="text-xs text-slate-400" id="app-subtitle">JSON-Lernsets</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center space-x-3">
+                <span id="quiz-mode-badge" class="bg-slate-700 text-xs text-slate-300 px-3 py-1.5 rounded-full font-medium uppercase tracking-wider">
+                    Standard-Modus
+                </span>
+                <!-- THEME SWITCHER -->
+                <div class="flex bg-slate-900 p-0.5 rounded-lg border border-slate-700 overflow-hidden" id="theme-selectors">
+                    <button onclick="setTheme('modern')" id="theme-btn-modern" class="px-3 py-1 text-xs font-semibold rounded bg-blue-600 text-white transition">
+                        Modern
+                    </button>
+                    <button onclick="setTheme('retro')" id="theme-btn-retro" class="px-3 py-1 text-xs font-semibold rounded text-slate-400 hover:text-slate-200 transition">
+                        Retro 95
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="flex-grow flex items-center justify-center p-4 md:p-8">
+        <div class="max-w-2xl w-full bg-slate-800 rounded-2xl shadow-2xl border border-slate-700/80 overflow-hidden transition-all duration-300" id="quiz-card">
+            
+            <!-- START SCREEN -->
+            <div id="start-screen" class="p-8 text-center space-y-6">
+                <div class="w-20 h-20 bg-blue-500/10 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-4 border border-blue-500/30" id="start-logo">
+                    <i class="fas fa-graduation-cap text-4xl"></i>
+                </div>
+                <h2 class="text-2xl font-bold text-white" id="start-title">Bist du bereit für den Topologie-Check?</h2>
+                <p class="text-slate-300 text-sm md:text-base leading-relaxed max-w-md mx-auto" id="start-desc">
+                    Teste dein Wissen oder verwalte deine eigenen JSON-Fragensets direkt von deinem Desktop aus!
+                </p>
+                
+                <div class="bg-slate-900/50 p-4 rounded-xl border border-slate-700/50 text-left space-y-2 max-w-md mx-auto text-xs text-slate-400" id="info-badge-panel">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-2">
+                            <i class="fas fa-check-circle text-emerald-500"></i>
+                            <span><strong id="loaded-questions-count">23</strong> Fragen einsatzbereit</span>
+                        </div>
+                        <button onclick="exportQuestionsAsJson()" class="text-blue-400 hover:text-blue-300 flex items-center space-x-1 font-semibold transition" title="Als JSON auf den Desktop herunterladen" id="btn-export-backup">
+                            <i class="fas fa-download mr-1"></i> Vorlage sichern
+                        </button>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <i class="fas fa-random text-emerald-500"></i>
+                        <span><strong>Zufallsmodus aktiv:</strong> Fragen werden bei jedem Durchlauf gemischt!</span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <i class="fas fa-check-circle text-emerald-500"></i>
+                        <span>Unterstützt hochauflösende Screenshots &amp; Bilder mit Zoom</span>
+                    </div>
+                </div>
+
+                <!-- SETTINGS DASHBOARD -->
+                <div class="bg-slate-900/40 p-4 rounded-xl border border-slate-700/50 max-w-md mx-auto space-y-4 text-left" id="settings-dashboard">
+                    <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1" id="settings-title">Spiel-Einstellungen</h4>
+                    
+                    <!-- QUESTIONS COUNT SELECTOR -->
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <div class="text-blue-500 bg-blue-500/10 p-2 rounded-lg" id="qcount-icon-bg">
+                                <i class="fas fa-list-ol text-sm"></i>
+                            </div>
+                            <div>
+                                <p class="text-xs font-semibold text-slate-200" id="label-qcount">Anzahl der Fragen</p>
+                                <p class="text-[10px] text-slate-400" id="sublabel-qcount">Zufällige Ziehung aus dem Pool</p>
+                            </div>
+                        </div>
+                        <select id="question-count-select" class="bg-slate-800 border border-slate-700 text-xs text-slate-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer">
+                            <option value="10" selected>10 Fragen</option>
+                            <option value="20">20 Fragen</option>
+                            <option value="30">30 Fragen</option>
+                            <option value="all">Alle Fragen</option>
+                        </select>
+                    </div>
+
+                    <div class="border-t border-slate-700 my-2" id="settings-divider"></div>
+
+                    <!-- TIMER SWITCH SETTING -->
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <div class="text-amber-500 bg-amber-500/10 p-2 rounded-lg" id="timer-icon-bg">
+                                <i class="fas fa-stopwatch text-sm"></i>
+                            </div>
+                            <div>
+                                <p class="text-xs font-semibold text-slate-200" id="label-timer">Zeitlimit (30s pro Frage)</p>
+                                <p class="text-[10px] text-slate-400" id="sublabel-timer">Automatische Auswertung nach Ablauf</p>
+                            </div>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer" id="timer-toggle-label">
+                            <input type="checkbox" id="timer-toggle" class="sr-only peer">
+                            <div class="w-9 h-5 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-400 after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600" id="timer-toggle-switch"></div>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="flex flex-col sm:flex-row gap-3 justify-center max-w-md mx-auto pt-2">
+                    <button id="btn-start" onclick="startQuiz()" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-semibold px-6 py-3.5 rounded-xl shadow-lg shadow-blue-600/20 transition duration-200 transform hover:-translate-y-0.5 active:translate-y-0">
+                        Quiz starten <i class="fas fa-arrow-right ml-2"></i>
+                    </button>
+                    <button id="btn-toggle-import" onclick="toggleImportPanel(true)" class="flex-1 bg-slate-700 hover:bg-slate-600 text-slate-200 font-semibold px-6 py-3.5 rounded-xl border border-slate-600 transition duration-200">
+                        <i class="fas fa-file-import mr-2"></i> JSON / Text laden
+                    </button>
+                </div>
+            </div>
+
+            <!-- IMPORT PANEL (Mit Datei-Uploader, Retro-Diskette und Drag&Drop) -->
+            <div id="import-panel" class="hidden p-6 md:p-8 space-y-6">
+                <div class="flex justify-between items-center border-b border-slate-700 pb-4" id="import-header">
+                    <div class="flex items-center space-x-2">
+                        <i class="fas fa-file-import text-blue-500 text-xl" id="import-title-icon"></i>
+                        <h2 class="text-xl font-bold text-white" id="import-title">Fragen einspielen</h2>
+                    </div>
+                    <button onclick="toggleImportPanel(false)" class="text-slate-400 hover:text-white text-lg transition" id="btn-close-import">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                <!-- Dateiupload-Bereich / DISKETTE -->
+                <div class="space-y-2">
+                    <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider" id="label-upload">Option A: Diskette einschieben (JSON-Datei laden)</label>
+                    <div id="drop-zone" class="border-2 border-dashed border-slate-700 hover:border-blue-500 rounded-xl p-6 text-center cursor-pointer transition relative group bg-slate-900/40 overflow-hidden flex flex-col justify-center items-center min-h-[190px]">
+                        <input type="file" id="file-input" accept=".json" class="absolute inset-0 opacity-0 cursor-pointer z-20" onchange="handleFileSelect(event)">
+                        
+                        <!-- DYNAMISCHES RETRO-DISKETTEN-DESIGN -->
+                        <div id="floppy-drive-ui" class="hidden flex flex-col items-center justify-center space-y-2 pointer-events-none transition-all duration-300 z-10">
+                            <!-- Floppy Drive Slot -->
+                            <div class="w-48 h-3 bg-black rounded-sm border border-slate-400 relative mb-4 flex items-center justify-between px-4">
+                                <div class="w-1.5 h-1.5 rounded-full bg-red-600" id="drive-led"></div>
+                                <div class="text-[8px] text-slate-400 font-mono select-none">3.5" DRIVE A:</div>
+                                <div class="w-4 h-1 bg-slate-400 rounded-sm"></div>
+                            </div>
+                            <!-- Floppy Disk -->
+                            <div id="floppy-disk" class="w-32 h-32 bg-blue-800 rounded-md p-2 flex flex-col justify-between shadow-xl relative border border-blue-950">
+                                <div class="flex justify-between items-start">
+                                    <div class="w-8 h-8 bg-slate-300 rounded-sm flex items-center justify-center">
+                                        <div class="w-4 h-6 bg-slate-500 rounded-xs"></div>
+                                    </div>
+                                    <div class="w-3 h-3 bg-blue-950 rounded-xs"></div>
+                                </div>
+                                <div class="w-full bg-slate-100 rounded-sm p-1.5 flex flex-col justify-end space-y-1 relative">
+                                    <div class="w-full h-1 bg-red-600"></div>
+                                    <div class="text-[6px] text-slate-800 font-bold tracking-tight text-center truncate font-mono" id="floppy-label-text">NETZWERK.JSON</div>
+                                    <div class="h-3 w-1/3 bg-slate-300 self-end rounded-xs"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Modernes Design -->
+                        <div class="space-y-2 pointer-events-none z-10" id="modern-upload-ui">
+                            <i class="fas fa-file-code text-3xl text-slate-500 group-hover:text-blue-400 transition" id="upload-icon"></i>
+                            <p class="text-sm font-semibold text-slate-300" id="upload-text">JSON-Datei auswählen oder hierher ziehen</p>
+                            <p class="text-xs text-slate-500" id="upload-subtext">Klicke hier, um deinen Desktop-Ordner zu durchsuchen</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="relative flex py-2 items-center" id="import-divider">
+                    <div class="flex-grow border-t border-slate-700" id="divider-l"></div>
+                    <span class="flex-shrink mx-4 text-slate-500 text-xs uppercase tracking-widest font-semibold" id="divider-txt">Oder manuell einfügen</span>
+                    <div class="flex-grow border-t border-slate-700" id="divider-r"></div>
+                </div>
+
+                <div class="space-y-4">
+                    <!-- Format-Tabs -->
+                    <div class="flex bg-slate-900/60 p-1 rounded-xl border border-slate-700" id="tab-controls">
+                        <button onclick="switchImportTab('json', true)" id="tab-btn-json" class="flex-1 text-center py-2 text-xs font-semibold rounded-lg bg-blue-600 text-white transition">
+                            JSON-Code-Editor
+                        </button>
+                        <button onclick="switchImportTab('text', true)" id="tab-btn-text" class="flex-1 text-center py-2 text-xs font-semibold rounded-lg text-slate-400 hover:text-slate-200 transition">
+                            Einfacher Text
+                        </button>
+                    </div>
+
+                    <!-- Beschreibungstext -->
+                    <p id="import-instructions" class="text-xs text-slate-400 leading-relaxed">
+                        Füge ein gültiges JSON-Array ein. Das Format muss genau den Schlüsseln <code class="bg-slate-900 px-1 py-0.5 rounded text-blue-400">question</code>, <code class="bg-slate-900 px-1 py-0.5 rounded text-blue-400">options</code> (Array), <code class="bg-slate-900 px-1 py-0.5 rounded text-blue-400">correctAnswer</code> (Index 0-3) und <code class="bg-slate-900 px-1 py-0.5 rounded text-blue-400">explanation</code> entsprechen.
+                    </p>
+
+                    <!-- Text-Area -->
+                    <div class="relative">
+                        <textarea id="import-textarea" rows="8" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-4 font-mono text-xs text-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-y" placeholder="Lade eine Vorlage..."></textarea>
+                    </div>
+
+                    <!-- Statusnachrichten -->
+                    <div id="import-feedback" class="hidden p-3 rounded-xl text-xs flex items-center space-x-2 transition-all">
+                        <!-- Wird dynamisch gefüllt -->
+                    </div>
+
+                    <!-- Aktionsbuttons im Import Panel -->
+                    <div class="flex flex-col sm:flex-row gap-3 justify-between items-center pt-2" id="import-actions">
+                        <div class="flex gap-2 w-full sm:w-auto">
+                            <button onclick="loadTemplate()" class="flex-1 sm:flex-none text-xs bg-slate-700/50 hover:bg-slate-700 text-slate-300 px-3 py-2 rounded-lg border border-slate-600/50 transition" id="btn-load-template">
+                                <i class="fas fa-paste mr-1.5"></i> Vorlage laden
+                            </button>
+                            <button onclick="clearImportText()" class="flex-1 sm:flex-none text-xs bg-slate-700/50 hover:bg-slate-700 text-rose-400 px-3 py-2 rounded-lg border border-slate-600/50 transition" id="btn-clear-import">
+                                <i class="fas fa-trash-alt mr-1.5"></i> Leeren
+                            </button>
+                        </div>
+                        <div class="flex gap-2 w-full sm:w-auto">
+                            <button onclick="toggleImportPanel(false)" class="flex-1 sm:flex-none bg-slate-700 hover:bg-slate-600 text-slate-200 font-semibold px-5 py-2.5 rounded-xl text-sm transition" id="btn-cancel-import">
+                                Abbrechen
+                            </button>
+                            <button onclick="processImport()" class="flex-1 sm:flex-none bg-blue-600 hover:bg-blue-500 text-white font-semibold px-5 py-2.5 rounded-xl text-sm shadow-lg shadow-blue-600/10 transition" id="btn-save-import">
+                                Speichern & Aktivieren
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- QUIZ SCREEN -->
+            <div id="quiz-screen" class="hidden p-6 md:p-8 space-y-6">
+                <!-- Fortschritt -->
+                <div class="flex justify-between items-center text-sm text-slate-400" id="progress-info">
+                    <span>Frage <strong id="current-question-num" class="text-white">1</strong> von <span id="total-questions-num">10</span></span>
+                    <span id="score-badge" class="bg-slate-700/50 px-3 py-1 rounded-md text-xs">Score: <strong id="current-score" class="text-blue-400">0</strong></span>
+                </div>
+                <!-- Fortschrittsbalken -->
+                <div class="w-full bg-slate-700 h-2 rounded-full overflow-hidden" id="progress-container">
+                    <div id="progress-bar" class="bg-blue-500 h-full transition-all duration-300" style="width: 10%"></div>
+                </div>
+
+                <!-- COUNTDOWN TIMER CONTAINER -->
+                <div id="timer-container" class="hidden space-y-1">
+                    <div class="flex justify-between items-center text-[11px] text-slate-400" id="timer-labels">
+                        <span class="flex items-center space-x-1.5">
+                            <i class="fas fa-clock text-amber-500 animate-pulse" id="timer-bell"></i>
+                            <span id="timer-desc">Verbleibende Antwortzeit</span>
+                        </span>
+                        <span id="timer-badge" class="font-mono font-bold bg-slate-900/50 px-2 py-0.5 rounded text-amber-400">30s</span>
+                    </div>
+                    <div class="w-full bg-slate-700 h-1.5 rounded-full overflow-hidden" id="timer-bar-container">
+                        <div id="timer-bar" class="bg-amber-500 h-full linear-timer" style="width: 100%"></div>
+                    </div>
+                </div>
+
+                <!-- DIAGRAM / PLACEHOLDER CONTAINER (Mit Zoom-Unterstützung) -->
+                <div id="visual-container" class="w-full bg-slate-900/60 rounded-xl border border-slate-750 p-4 min-h-[240px] flex justify-center items-center overflow-hidden shadow-inner transition-all duration-300">
+                    <!-- Bild oder Platzhalter SVG wird hier gerendert -->
+                </div>
+
+                <!-- Frage -->
+                <div class="space-y-2">
+                    <h3 id="question-text" class="text-lg md:text-xl font-semibold text-white leading-snug">
+                        Frage-Text wird geladen...
+                    </h3>
+                </div>
+
+                <!-- Antwortmöglichkeiten -->
+                <div id="options-container" class="space-y-3">
+                    <!-- Buttons werden dynamisch generiert -->
+                </div>
+
+                <!-- Erklärungsbox -->
+                <div id="explanation-box" class="hidden p-4 rounded-xl border transition-all duration-200">
+                    <div class="flex items-start space-x-3">
+                        <span id="explanation-icon" class="text-xl mt-0.5"></span>
+                        <div>
+                            <h4 id="explanation-title" class="font-semibold text-sm">Richtig!</h4>
+                            <p id="explanation-text" class="text-xs md:text-sm mt-1 text-slate-300 leading-relaxed"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Aktionen -->
+                <div class="flex justify-end pt-2">
+                    <button id="action-btn" onclick="checkAnswer()" disabled class="w-full sm:w-auto bg-blue-600 disabled:bg-slate-700 disabled:text-slate-400 disabled:cursor-not-allowed hover:bg-blue-500 text-white font-semibold px-6 py-3 rounded-xl transition duration-200">
+                        Antwort prüfen
+                    </button>
+                </div>
+            </div>
+
+            <!-- RESULT SCREEN -->
+            <div id="result-screen" class="hidden p-8 text-center space-y-6">
+                <div id="result-emoji-container" class="w-20 h-20 rounded-full flex items-center justify-center mx-auto border">
+                    <i id="result-icon" class="fas text-4xl"></i>
+                </div>
+                <div class="space-y-2">
+                    <h2 class="text-2xl font-bold text-white" id="result-title">Testergebnis</h2>
+                    <p class="text-slate-400 text-sm" id="result-subtitle">Du hast das Quiz erfolgreich beendet.</p>
+                </div>
+
+                <div class="bg-slate-900/60 rounded-2xl p-6 max-w-md mx-auto border border-slate-700/50 flex justify-around items-center" id="stats-panel">
+                    <div>
+                        <span class="block text-3xl font-extrabold text-white" id="final-score">0/10</span>
+                        <span class="text-xs text-slate-400" id="label-stat-score">Ergebnis</span>
+                    </div>
+                    <div class="h-12 w-px bg-slate-700" id="stat-divider-1"></div>
+                    <div>
+                        <span class="block text-3xl font-extrabold text-white" id="percentage">0%</span>
+                        <span class="text-xs text-slate-400" id="label-stat-ratio">Quote</span>
+                    </div>
+                    <div class="h-12 w-px bg-slate-700" id="stat-divider-2"></div>
+                    <div>
+                        <span class="block text-sm font-semibold px-2.5 py-1 rounded-full" id="performance-tag">Gut</span>
+                        <span class="text-xs text-slate-400 block mt-1" id="label-stat-tag">Bewertung</span>
+                    </div>
+                </div>
+
+                <p id="result-message" class="text-slate-300 text-sm max-w-md mx-auto leading-relaxed">
+                    Feedback-Text...
+                </p>
+
+                <div class="flex flex-col sm:flex-row gap-3 justify-center pt-4">
+                    <button onclick="restartQuiz()" class="bg-blue-600 hover:bg-blue-500 text-white font-semibold px-6 py-3 rounded-xl transition duration-200" id="btn-restart">
+                        <i class="fas fa-redo mr-2"></i> Erneut versuchen
+                    </button>
+                    <button onclick="showStartScreen()" class="bg-slate-700 hover:bg-slate-600 text-slate-200 font-semibold px-6 py-3 rounded-xl transition duration-200" id="btn-home">
+                        Zur Startseite
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- LIGHTBOX / ZOOM MODAL -->
+    <div id="lightbox-modal" class="hidden fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4 cursor-zoom-out" onclick="closeLightbox()">
+        <button onclick="closeLightbox(event)" class="absolute top-6 right-6 text-white text-3xl hover:text-slate-300 transition focus:outline-none" aria-label="Schließen">
+            <i class="fas fa-times"></i>
+        </button>
+        <img id="lightbox-img" class="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl cursor-zoom-out" src="" alt="Vergrößerte Ansicht">
     </div>
 
+    <!-- Footer -->
+    <footer class="bg-slate-800/40 border-t border-slate-800 py-4 text-center text-xs text-slate-500">
+        <div class="max-w-4xl mx-auto px-4">
+            <p id="footer-text">© 2026 IT-Umschulungs-Coach. Entwickelt für dynamisches und offline-fähiges Lernen am Desktop, von Alexander Rahn.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Die vollständigen 23 prüfungsrelevanten Fragen als Standard geladen
+        const defaultQuestions = [
+            {
+                "question": "Was unterscheidet die physische von der logischen Netzwerktopologie laut Definition der Präsentation?",
+                "options": [
+                    "Die physische beschreibt die tatsächliche Verkabelung und Hardware-Anordnung; die logische den genauen Weg des Datenflusses und die Protokolle.",
+                    "Die physische Topologie existiert nur in der Theorie; die logische Topologie beschreibt die echte Hardware.",
+                    "Es gibt keinen Unterschied, beide Begriffe beschreiben exakt dieselbe Netzwerkkonfiguration.",
+                    "Die physische Topologie wird ausschließlich für Funknetzwerke genutzt; die logische nur für Kupferkabel."
+                ],
+                "correctAnswer": 0,
+                "explanation": "Laut Folien beschreibt die physische Topologie Aspekte wie das geometrische Schema, Kabel, Anschlüsse und Standorte. Die logische Topologie erklärt dagegen den Datenfluss von Station zu Station, den Datenweg und die verwendeten Protokolle."
+            },
+            {
+                "question": "Welche Topologie stellt die einfachste physische Struktur dar, bei der genau zwei Stationen direkt miteinander verbunden sind?",
+                "options": [
+                    "Bus-Topologie",
+                    "Point to Point Topology (Punkt-zu-Punkt)",
+                    "Stern-Topologie",
+                    "Ring-Topologie"
+                ],
+                "correctAnswer": 1,
+                "explanation": "Die Point-to-Point-Topologie verbindet genau zwei Stationen (Knoten) direkt über ein einzelnes Übertragungsmedium miteinander, wie auf dem entsprechenden PowerPoint-Diagramm zu sehen ist."
+            },
+            {
+                "question": "Wie heißen in einer klassischen Bus-Topologie die Abzweigleitungen und die Anschlussstücke am Hauptkabel (Main Cable)?",
+                "options": [
+                    "Bridge und Bridge-Line",
+                    "Uplink und Port",
+                    "Dropline und Tap",
+                    "Loopback und Interface"
+                ],
+                "correctAnswer": 2,
+                "explanation": "Das Bus-Diagramm zeigt es deutlich: Das Hauptkabel besitzt Anschlussstücke (Taps), von denen die Stichleitungen (Droplines) direkt zu den einzelnen Stationen abzweigen."
+            },
+            {
+                "question": "Welche physischen Komponenten werden auf der Folie 'The parts of the bus topology' für den Anschluss an die Netzwerkkarte gezeigt?",
+                "options": [
+                    "RJ45-Stecker, Patchkabel und Switch-Port",
+                    "SFP-Modul, Glasfaserkabel und Medienkonverter",
+                    "BNC connector (BNC-Stecker), T connector (T-Stück) und Terminator (Abschlusswiderstand)",
+                    "Wi-Fi-Antenne, Access Point und Funkbrücke"
+                ],
+                "correctAnswer": 2,
+                "explanation": "Die Detailzeichnung der Bus-Hardware zeigt den BNC-Stecker, das T-Stück (T-Connector) zum direkten Aufstecken auf die Netzwerkkarte (Network Card) sowie den Abschlusswiderstand (Terminator)."
+            },
+            {
+                "question": "Wie groß ist ein Frame im 'Token-Bus-Frame-Format' laut Präsentation maximal und aus wie vielen Feldern besteht er?",
+                "options": [
+                    "1518 Byte und 4 Felder",
+                    "64 Byte und 5 Felder",
+                    "8202 Byte und 8 Felder",
+                    "9000 Byte (Jumbo Frame) und 10 Felder"
+                ],
+                "correctAnswer": 2,
+                "explanation": "Auf der Folie zum Token-Bus-Frame steht geschrieben: 'Die Gesamtgröße des Frames beträgt 8202 Byte, und der Frame besteht aus 8 Feldern.'"
+            },
+            {
+                "question": "Welches Feld im Token-Bus-Frame-Format besitzt eine variable Größe von 0 bis 8182 Bytes?",
+                "options": [
+                    "Preamble",
+                    "Destination address",
+                    "Data (Payload)",
+                    "Checksum"
+                ],
+                "correctAnswer": 2,
+                "explanation": "Das Nutzdatenfeld 'Data (Payload)' ist flexibel und belegt im Frame-Format eine variable Größe von $0$ bis maximal $8182$ Bytes."
+            },
+            {
+                "question": "Was beschreibt das Prinzip der gezeigten 'Token Bus' Topologie am besten?",
+                "options": [
+                    "Eine physische Ring-Topologie, auf der logisch ein Bus-Verfahren läuft.",
+                    "Eine physische Bus-Topologie, auf der logisch ein Ring-Zugriffsverfahren (Token-Passing) simuliert wird.",
+                    "Ein reines WLAN-Mesh-Netzwerk ohne Kabelverbindungen.",
+                    "Zwei redundante Bus-Leitungen, die im Gegenverkehr betrieben werden"
+                ],
+                "correctAnswer": 1,
+                "explanation": "Beim Token Bus sind alle Stationen physisch an einem gemeinsamen Bus (Shared Medium) angeschlossen. Logisch wird das Token jedoch nacheinander im Kreis (als Ring) von Station zu Station gereicht."
+            },
+            {
+                "question": "Was unterscheidet die 'Dual Ring Topology' (Doppelring) bezüglich des Datenflusses von einer einfachen Ring-Topologie?",
+                "options": [
+                    "Die Daten fließen auf beiden Ringen immer in exakt dieselbe Richtung.",
+                    "Die Daten fließen auf den zwei konzentrischen Ringen in entgegengesetzte Richtungen (Gegenlauf).",
+                    "Daten fließen nur auf dem äußeren Ring, während der innere Ring ausschließlich Strom transportiert.",
+                    "Der Datenfluss wird komplett abgeschaltet, sobald mehr als drei Stationen aktiv sind."
+                ],
+                "correctAnswer": 1,
+                "explanation": "Das Diagramm der Dual Ring Topology zeigt zwei Ringe mit entgegengesetzten Richtungspfeilen (Direction of flow). Dies dient der Ausfallsicherheit, da bei einem Kabelbruch ein Loopback gebildet werden kann."
+            },
+            {
+                "question": "Welche Hardware-Komponente fungiert auf dem Diagramm der 'Star Topology' als zentraler Verteiler für die Stationen?",
+                "options": [
+                    "Ein passiver Hub",
+                    "Ein Switch",
+                    "Ein Terminator",
+                    "Ein Gateway"
+                ],
+                "correctAnswer": 1,
+                "explanation": "Im Zentrum des gezeigten Stern-Diagramms sitzt ein zentraler Switch, an den alle Endgeräte sternförmig über eigene Punkt-zu-Punkt-Leitungen angebunden sind."
+            },
+            {
+                "question": "Welche hierarchische Struktur bildet eine klassische physische Baum-Topologie (Tree Topology) ab?",
+                "options": [
+                    "Eine kaskade aus Switches oder Routern, die sich von einer zentralen Wurzel nach unten hin verzweigt.",
+                    "Ein geschlossener Kreis, bei dem alle Geräte gleichberechtigt sind.",
+                    "Ein langes Koaxialkabel, das an beiden Enden mit BNC-Widerständen terminiert ist.",
+                    "Eine vollvermaschte Struktur, bei der jeder Switch mit jedem anderen Switch gekoppelt ist."
+                ],
+                "correctAnswer": 0,
+                "explanation": "Eine Baum-Topologie ist hierarchisch aufgebaut. An der Spitze steht eine Wurzel (z.B. ein Core-Switch/Router), die sich über Etagen-Switches bis hinunter zu den Endgeräten (Stations) verzweigt."
+            },
+            {
+                "question": "Welche drei IP-Subnetze (Netzadressen) werden im detaillierten Praxisbeispiel der Baum-Topologie (Folie 12) gezeigt?",
+                "options": [
+                    "10.0.0.0/8, 172.16.0.0/12 und 192.168.0.0/16",
+                    "192.168.1.0/24 (Server room), 192.168.17.0/24 (Developers Office) und 192.168.18.0/24 (Testers Office)",
+                    "192.168.1.1, 192.168.17.1 und 192.168.18.1",
+                    "255.255.255.0, 255.255.0.0 und 255.0.0.0"
+                ],
+                "correctAnswer": 1,
+                "explanation": "In der detaillierten Netzwerk-Baum-Grafik sind genau diese drei Subnetze eingezeichnet: Das Entwickler-Büro (.17.0/24), das Tester-Büro (.18.0/24) und der geschützte Serverraum (.1.0/24)."
+            },
+            {
+                "question": "Wie werden im kabellosen/kabelgebundenen Tree-Beispiel (Folie 13) zwei geografisch getrennte Switches drahtlos gekoppelt?",
+                "options": [
+                    "Über ein unterirdisches Glasfaserkabel",
+                    "Über eine drahtlose Funkbrücke ('Bridge') zwischen zwei Wi-Fi Access Points",
+                    "Über eine direkte Satellitenverbindung",
+                    "Über das öffentliche Mobilfunknetz"
+                ],
+                "correctAnswer": 1,
+                "explanation": "Das Diagramm zeigt eine gestrichelte Funkstrecke namens 'Bridge' zwischen zwei Wi-Fi Access Points, um die beiden kabelgebundenen Switch-Infrastrukturen drahtlos miteinander zu verbinden."
+            },
+            {
+                "question": "Welche zwei Ausprägungen der Maschen-Topologie (Mesh Topology) werden in der Präsentation direkt gegenübergestellt?",
+                "options": [
+                    "Single Mesh und Multi Mesh",
+                    "Physisches Mesh und Logisches Mesh",
+                    "Full Mesh (vollvermascht) und Partial Mesh (teilvermascht)",
+                    "Lokales Mesh und Globales Mesh"
+                ],
+                "correctAnswer": 2,
+                "explanation": "Die Folie stellt 'Full Mesh' (alle 6 Knoten sind mit jedem anderen Knoten direkt verbunden) und 'Partial Mesh' (Knoten sind nur teilweise redundant verbunden, um Kosten zu sparen) bildlich gegenüber."
+            },
+            {
+                "question": "Wie viele physische Leitungen (Kabel) werden für ein vollmaschiges Netzwerk mit n = 6 Endgeräten benötigt, wie es auf der Mesh-Folie abgebildet ist?",
+                "options": [
+                    "6 Leitungen",
+                    "12 Leitungen",
+                    "15 Leitungen",
+                    "30 Leitungen"
+                ],
+                "correctAnswer": 2,
+                "explanation": "Die Formel zur Berechnung der Leitungen lautet: $n(n - 1) / 2$. Für 6 Endgeräte im Bild ergibt dies: $6(6 - 1) / 2 = 6(5) / 2 = 15$ Leitungen."
+            },
+            {
+                "question": "Welcher der folgenden Aspekte gehört laut Definition der Präsentation zur LOGISCHEN Topologie?",
+                "options": [
+                    "Der Weg der Daten im Netzwerk und welche Protokolle verwendet werden",
+                    "Die Arten und die Anzahl der verwendeten Netzwerkadapter",
+                    "Der genaue physische Standort der Geräte",
+                    "Die Art der Kabel und die Kabelanschlüsse"
+                ],
+                "correctAnswer": 0,
+                "explanation": "Laut Folie 3 erklärt die logische Topologie, wie Daten übertragen werden, welchen Weg sie nehmen und welche Protokolle verwendet werden. Kabel, Anschlüsse, Adapter und Standorte gehören hingegen zur physischen Topologie."
+            },
+            {
+                "question": "Welches Bauteil ist bei einer physischen Bus-Topologie an beiden Kabelenden zwingend erforderlich?",
+                "options": [
+                    "Ein aktiver Switch",
+                    "Ein Router",
+                    "Ein Terminator (Abschlusswiderstand)",
+                    "Ein Gateway"
+                ],
+                "correctAnswer": 2,
+                "explanation": "Terminatoren absorbieren ankommende Signale an den physischen Kabelenden. Ohne sie würden die elektrischen Impulse reflektiert werden (Echos), was alle nachfolgenden Datenübertragungen sofort unbrauchbar macht."
+            },
+            {
+                "question": "Was ist die größte systemspezifische Schwachstelle der physischen Stern-Topologie?",
+                "options": [
+                    "Die Netzwerkkabel sind zu empfindlich.",
+                    "Das zentrale Kopplungselement (Switch/Hub) stellt einen Single Point of Failure dar.",
+                    "Es können maximal 4 Endgeräte angeschlossen werden.",
+                    "Die Datenübertragung ist prinzipbedingt sehr langsam."
+                ],
+                "correctAnswer": 1,
+                "explanation": "Fällt der zentrale Switch aus, bricht die gesamte Kommunikation zwischen den Stationen zusammen. Die Verkabelung zu den einzelnen PCs nützt dann nichts mehr."
+            },
+            {
+                "question": "Wie viele physische Leitungen (Kabel) werden für ein vollmaschiges Netzwerk mit n = 8 Endgeräten benötigt?",
+                "options": [
+                    "8 Leitungen",
+                    "16 Leitungen",
+                    "28 Leitungen",
+                    "56 Leitungen"
+                ],
+                "correctAnswer": 2,
+                "explanation": "Die Formel zur Berechnung der Leitungen in vollmaschigen Topologien lautet: $n(n - 1) / 2$. Für 8 Endgeräte ergibt dies: $8(8 - 1) / 2 = 8(7) / 2 = 28$ Leitungen."
+            },
+            {
+                "question": "Was passiert in einer einfachen, klassischen Ring-Topologie ohne redundante Wege, wenn eine Station ausfällt?",
+                "options": [
+                    "Das Netz läuft über ein drahtloses Ausweichprotokoll weiter.",
+                    "Der Datenfluss ist komplett unterbrochen, das gesamte Netzwerk fällt aus.",
+                    "Nur der direkte Nachfolger des defekten Geräts verliert die Verbindung.",
+                    "Die Daten werden automatisch im Gegenverkehr zurückgeroutet."
+                ],
+                "correctAnswer": 1,
+                "explanation": "Da in einem einfachen Ring die Daten jede Station passieren müssen, führt der Ausfall eines einzigen Gerätes oder Kabels zur Unterbrechung des Token-Umlaufs und legt das gesamte Netz lahm."
+            },
+            {
+                "question": "Welches Medienzugriffsverfahren wird in kabellosen Netzwerken (WLAN, logischer Bus) verwendet, da Kollisionen im Vorfeld vermieden werden müssen?",
+                "options": [
+                    "CSMA/CD",
+                    "CSMA/CA (Carrier Sense Multiple Access with Collision Avoidance)",
+                    "Token Passing",
+                    "TDMA (Time Division Multiple Access)"
+                ],
+                "correctAnswer": 1,
+                "explanation": "In Funknetzwerken können Stationen nicht gleichzeitig senden und lauschen (Half-Duplex-Problem). Daher wird CSMA/CA genutzt, um Kollisionen durch eine zufällige Wartezeit (Backoff) und optionale RTS/CTS-Signale aktiv zu vermeiden."
+            },
+            {
+                "question": "Wie nennt man die logische Segmentierung eines physischen Switches in mehrere, voneinander isolierte Broadcast-Domänen?",
+                "options": [
+                    "Subnetting",
+                    "VLAN (Virtual Local Area Network)",
+                    "Routing",
+                    "NAT (Network Address Translation)"
+                ],
+                "correctAnswer": 1,
+                "explanation": "Mit VLANs lassen sich auf ein und derselben physischen Switch-Infrastruktur logisch komplett getrennte Netze (z. B. für Buchhaltung und Gäste) einrichten. Ein Broadcast aus einem VLAN erreicht andere VLANs nicht."
+            },
+            {
+                "question": "Welche logische Struktur bildet ein Bluetooth-Netzwerk (sogenanntes Piconetz) mit einem Master und bis zu 7 aktiven Slave-Geräten ab?",
+                "options": [
+                    "Logischer Ring",
+                    "Logischer Stern",
+                    "Logische Vollvermaschung",
+                    "Logischer Bus"
+                ],
+                "correctAnswer": 1,
+                "explanation": "Im Bluetooth-Piconetz steuert das Master-Gerät die gesamte Kommunikation zentral. Alle Datenflüsse laufen über den Master oder werden von ihm koordiniert, was logisch einem Stern entspricht."
+            },
+            {
+                "question": "In welcher Topologie muss jede Netzwerkkarte (NIC) im Promiscuous-Mode standardmäßig alle Datenpakete physikalisch analysieren?",
+                "options": [
+                    "Stern-Topologie mit Switch",
+                    "Vollmaschige Topologie",
+                    "Bus-Topologie (Shared Medium)",
+                    "Punkt-zu-Punkt-Verbindung"
+                ],
+                "correctAnswer": 2,
+                "explanation": "Bei einer Bus-Topologie wandern die Signale an allen angeschlossenen Stationen vorbei. Jedes Gerät 'hört' physikalisch alles mit und filtert erst auf Layer 2 (MAC-Adresse) die Pakete heraus, die nicht an es gerichtet sind."
+            }
+        ];
+
+        // Systemvariablen
+        let questions = [...defaultQuestions];
+        let quizQuestions = []; // Shuffled subset für die aktive Runde
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let selectedOptionIndex = null;
+        let isAnswerChecked = false;
+        let activeImportTab = 'json';
+        let currentTheme = 'modern';
+
+        // Countdown Timer Variablen
+        let isTimerEnabled = false;
+        let timerDuration = 30; // Sekunden pro Frage
+        let timeLeft = 30;
+        let timerInterval = null;
+
+        // JSON-Template zur Veranschaulichung
+        const jsonTemplate = `[
+  {
+    "question": "Was ist die Hauptaufgabe eines Routers?",
+    "options": [
+      "Verbinden von unterschiedlichen IP-Netzwerken",
+      "Erstellen von Backups im LAN",
+      "Terminieren eines Buskabels",
+      "Zuweisen von analogen Frequenzen"
+    ],
+    "correctAnswer": 0,
+    "explanation": "Ein Router arbeitet auf Layer 3 des OSI-Modells und leitet Pakete gezielt zwischen logisch getrennten Netzwerken weiter."
+  },
+  {
+    "question": "Welche IP-Adresse repräsentiert den localhost?",
+    "options": [
+      "192.168.0.1",
+      "10.0.0.1",
+      "127.0.0.1",
+      "255.255.255.255"
+    ],
+    "correctAnswer": 2,
+    "explanation": "Die Adresse 127.0.0.1 ist im IPv4-Standard für die interne Test-Schnittstelle reserviert.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/3/3a/Netzwerktopologie_Stern.svg"
+  }
+]`;
+
+        // Einfaches Text-Template als Alternative
+        const textTemplate = `Frage: Was ist ein großer Vorteil der Stern-Topologie?
+A) Günstigste Verkabelung von allen
+B) Leicht erweiterbar und störungsunempfindlich für andere Clients
+C) Benötigt absolut keine Kopplungselemente wie Switches
+D) Funktioniert ohne Stromzufuhr
+Antwort: B
+Erklärung: Da jedes Endgerät ein exklusives Kabel zum Switch besitzt, betrifft ein einzelner Kabelbruch nur dieses Gerät. Der Rest arbeitet störungsfrei weiter.`;
+
+        // Startkonfiguration
+        window.onload = function() {
+            updateLoadedCount();
+            loadTemplate();
+            setupDragAndDrop();
+        }
+
+        function updateLoadedCount() {
+            document.getElementById('loaded-questions-count').innerText = questions.length;
+        }
+
+        // Theme-Umschalter (Modern vs Retro)
+        function setTheme(theme) {
+            currentTheme = theme;
+            const body = document.body;
+            const modernBtn = document.getElementById('theme-btn-modern');
+            const retroBtn = document.getElementById('theme-btn-retro');
+            const floppyDriveUI = document.getElementById('floppy-drive-ui');
+            const modernUploadUI = document.getElementById('modern-upload-ui');
+
+            if (theme === 'retro') {
+                body.classList.add('retro-mode');
+                
+                retroBtn.className = "px-3 py-1 text-xs font-semibold rounded bg-gray-400 text-black border border-black";
+                modernBtn.className = "px-3 py-1 text-xs font-semibold rounded text-gray-700 hover:text-black";
+                
+                floppyDriveUI.classList.remove('hidden');
+                modernUploadUI.classList.add('hidden');
+            } else {
+                body.classList.remove('retro-mode');
+                
+                modernBtn.className = "px-3 py-1 text-xs font-semibold rounded bg-blue-600 text-white transition";
+                retroBtn.className = "px-3 py-1 text-xs font-semibold rounded text-slate-400 hover:text-slate-200 transition";
+                
+                floppyDriveUI.classList.add('hidden');
+                modernUploadUI.classList.remove('hidden');
+            }
+            
+            // Wenn wir gerade eine Frage geladen haben, rendern wir den Container neu, um den Theme-Wechsel zu reflektieren
+            if (document.getElementById('quiz-screen').classList.contains('hidden') === false) {
+                const q = quizQuestions[currentQuestionIndex];
+                if (!q.image) {
+                    showPlaceholderFallback();
+                }
+            }
+        }
+
+        // Fisher-Yates-Zufalls-Mischer
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        // Drag & Drop Setup
+        function setupDragAndDrop() {
+            const dropZone = document.getElementById('drop-zone');
+            
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropZone.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    if (currentTheme === 'modern') {
+                        dropZone.classList.add('border-blue-500', 'bg-blue-500/10');
+                    } else {
+                        dropZone.style.backgroundColor = '#dfdfdf';
+                    }
+                }, false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    if (currentTheme === 'modern') {
+                        dropZone.classList.remove('border-blue-500', 'bg-blue-500/10');
+                    } else {
+                        dropZone.style.backgroundColor = '';
+                    }
+                }, false);
+            });
+
+            dropZone.addEventListener('drop', (e) => {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                if (files.length > 0) {
+                    handleFileRead(files[0]);
+                }
+            }, false);
+        }
+
+        // Desktop-Dateiauswahl verarbeiten
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) {
+                handleFileRead(file);
+            }
+        }
+
+        function handleFileRead(file) {
+            if (!file.name.endsWith('.json')) {
+                showFeedback("Fehler: Bitte wähle eine echte *.json Datei aus.", "error");
+                return;
+            }
+
+            // Floppy Animation triggern bei Retro
+            if (currentTheme === 'retro') {
+                const floppy = document.getElementById('floppy-disk');
+                const led = document.getElementById('drive-led');
+                const label = document.getElementById('floppy-label-text');
+                
+                label.innerText = file.name.toUpperCase();
+                floppy.classList.add('floppy-inserted');
+                led.classList.add('led-active');
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                setTimeout(() => {
+                    try {
+                        const content = e.target.result;
+                        const parsed = JSON.parse(content);
+                        
+                        if (!Array.isArray(parsed)) {
+                            throw new Error("Das JSON-Format muss ein Array ([...]) von Objekten sein.");
+                        }
+
+                        switchImportTab('json', true);
+                        document.getElementById('import-textarea').value = content;
+                        
+                        showFeedback(`"${file.name}" erfolgreich eingelesen! Drücke jetzt auf "Speichern & Aktivieren"`, "success");
+                        
+                        if (currentTheme === 'modern') {
+                            document.getElementById('upload-icon').className = "fas fa-file-signature text-3xl text-emerald-500";
+                            document.getElementById('upload-text').innerText = `Datei geladen: ${file.name}`;
+                        } else {
+                            const led = document.getElementById('drive-led');
+                            led.classList.remove('led-active');
+                            led.style.backgroundColor = '#22c55e'; // Feste grüne LED
+                        }
+                    } catch (err) {
+                        showFeedback(`Fehler beim Lesen der Datei: ${err.message}`, "error");
+                        resetFloppyAnimation();
+                    }
+                }, currentTheme === 'retro' ? 1200 : 50); // Simulierter Retro-Read
+            };
+            reader.readAsText(file);
+        }
+
+        function resetFloppyAnimation() {
+            const floppy = document.getElementById('floppy-disk');
+            const led = document.getElementById('drive-led');
+            const label = document.getElementById('floppy-label-text');
+            
+            floppy.classList.remove('floppy-inserted');
+            led.classList.remove('led-active');
+            led.style.backgroundColor = '';
+            label.innerText = "NETZWERK.JSON";
+            document.getElementById('file-input').value = "";
+        }
+
+        // Fragen als JSON-Datei herunterladen (Backup auf den Desktop)
+        function exportQuestionsAsJson() {
+            const jsonString = JSON.stringify(questions, null, 2);
+            const blob = new Blob([jsonString], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = "netzwerktopologien_fragen.json";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // Toggle Import Panel
+        function toggleImportPanel(show) {
+            const startScreen = document.getElementById('start-screen');
+            const importPanel = document.getElementById('import-panel');
+            
+            if (show) {
+                startScreen.classList.add('hidden');
+                importPanel.classList.remove('hidden');
+            } else {
+                importPanel.classList.add('hidden');
+                startScreen.classList.remove('hidden');
+                hideFeedback();
+                
+                if (currentTheme === 'modern') {
+                    document.getElementById('upload-icon').className = "fas fa-file-code text-3xl text-slate-500";
+                    document.getElementById('upload-text').innerText = "JSON-Datei auswählen oder hierher ziehen";
+                    document.getElementById('file-input').value = "";
+                } else {
+                    resetFloppyAnimation();
+                }
+            }
+        }
+
+        function switchImportTab(tab, preserveContent = false) {
+            activeImportTab = tab;
+            const btnText = document.getElementById('tab-btn-text');
+            const btnJson = document.getElementById('tab-btn-json');
+            const inst = document.getElementById('import-instructions');
+            
+            if (tab === 'text') {
+                btnText.className = currentTheme === 'retro' 
+                    ? "flex-1 text-center py-2 text-xs font-semibold bg-gray-400 text-black border border-black"
+                    : "flex-1 text-center py-2 text-xs font-semibold rounded-lg bg-blue-600 text-white transition";
+                
+                btnJson.className = currentTheme === 'retro'
+                    ? "flex-1 text-center py-2 text-xs font-semibold text-gray-700"
+                    : "flex-1 text-center py-2 text-xs font-semibold rounded-lg text-slate-400 hover:text-slate-200 transition";
+                
+                inst.innerHTML = 'Verwende das untenstehende Muster für reinen Text. Trenne verschiedene Fragen mit drei Bindestrichen (<code class="bg-slate-900 px-1 py-0.5 rounded text-blue-400">---</code>).';
+                if (!preserveContent) {
+                    document.getElementById('import-textarea').value = textTemplate;
+                }
+            } else {
+                btnJson.className = currentTheme === 'retro'
+                    ? "flex-1 text-center py-2 text-xs font-semibold bg-gray-400 text-black border border-black"
+                    : "flex-1 text-center py-2 text-xs font-semibold rounded-lg bg-blue-600 text-white transition";
+                
+                btnText.className = currentTheme === 'retro'
+                    ? "flex-1 text-center py-2 text-xs font-semibold text-gray-700"
+                    : "flex-1 text-center py-2 text-xs font-semibold rounded-lg text-slate-400 hover:text-slate-200 transition";
+                
+                inst.innerHTML = 'Füge ein gültiges JSON-Array ein. Das Format muss exakt den Schlüsseln <code class="bg-slate-900 px-1 py-0.5 rounded text-blue-400">question</code>, <code class="bg-slate-900 px-1 py-0.5 rounded text-blue-400">options</code>, <code class="bg-slate-900 px-1 py-0.5 rounded text-blue-400">correctAnswer</code> und <code class="bg-slate-900 px-1 py-0.5 rounded text-blue-400">explanation</code> entsprechen.';
+                if (!preserveContent) {
+                    document.getElementById('import-textarea').value = jsonTemplate;
+                }
+            }
+            hideFeedback();
+        }
+
+        function loadTemplate() {
+            const tx = document.getElementById('import-textarea');
+            if (activeImportTab === 'text') {
+                tx.value = textTemplate;
+            } else {
+                tx.value = jsonTemplate;
+            }
+            showFeedback("Vorlage geladen. Du kannst sie jetzt bearbeiten!", "info");
+        }
+
+        function clearImportText() {
+            document.getElementById('import-textarea').value = "";
+            showFeedback("Textfeld geleert.", "info");
+        }
+
+        function showFeedback(msg, type) {
+            const el = document.getElementById('import-feedback');
+            el.classList.remove('hidden', 'bg-emerald-500/10', 'text-emerald-400', 'border-emerald-500/30', 'bg-rose-500/10', 'text-rose-400', 'border-rose-500/30', 'bg-blue-500/10', 'text-blue-400', 'border-blue-500/30');
+            el.classList.add('border');
+
+            if (type === 'success') {
+                el.classList.add('bg-emerald-500/10', 'text-emerald-400', 'border-emerald-500/30');
+                el.innerHTML = `<i class="fas fa-check-circle mr-2"></i> <span>${msg}</span>`;
+            } else if (type === 'error') {
+                el.classList.add('bg-rose-500/10', 'text-rose-400', 'border-rose-500/30');
+                el.innerHTML = `<i class="fas fa-exclamation-circle mr-2"></i> <span>${msg}</span>`;
+            } else {
+                el.classList.add('bg-blue-500/10', 'text-blue-400', 'border-blue-500/30');
+                el.innerHTML = `<i class="fas fa-info-circle mr-2"></i> <span>${msg}</span>`;
+            }
+        }
+
+        function hideFeedback() {
+            document.getElementById('import-feedback').classList.add('hidden');
+        }
+
+        // Einleseprozess starten und parsen
+        function processImport() {
+            const rawInput = document.getElementById('import-textarea').value.trim();
+            if (!rawInput) {
+                showFeedback("Bitte gib Text oder JSON ein oder wähle eine Datei aus.", "error");
+                return;
+            }
+
+            let importedList = [];
+
+            if (activeImportTab === 'text') {
+                try {
+                    const questionBlocks = rawInput.split(/---+\s*/);
+                    questionBlocks.forEach((block, blockIdx) => {
+                        const cleanBlock = block.trim();
+                        if (!cleanBlock) return;
+
+                        const lines = cleanBlock.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+                        let question = "";
+                        let options = [];
+                        let correctAnswer = null;
+                        let explanation = "";
+
+                        lines.forEach(line => {
+                            if (line.match(/^(Frage|Q):/i)) {
+                                question = line.replace(/^(Frage|Q):\s*/i, "");
+                            } else if (line.match(/^[A-D]\)/i)) {
+                                options.push(line.replace(/^[A-D]\)\s*/i, ""));
+                            } else if (line.match(/^(Antwort|Richtig):/i)) {
+                                const ansLetter = line.replace(/^(Antwort|Richtig):\s*/i, "").trim().toUpperCase();
+                                if (ansLetter === 'A') correctAnswer = 0;
+                                else if (ansLetter === 'B') correctAnswer = 1;
+                                else if (ansLetter === 'C') correctAnswer = 2;
+                                else if (ansLetter === 'D') correctAnswer = 3;
+                            } else if (line.match(/^(Erklärung|Explanation):/i)) {
+                                explanation = line.replace(/^(Erklärung|Explanation):\s*/i, "");
+                            }
+                        });
+
+                        if (question && options.length >= 2 && correctAnswer !== null) {
+                            importedList.push({
+                                question,
+                                options,
+                                correctAnswer,
+                                explanation: explanation || "Keine zusätzliche Erklärung angegeben."
+                            });
+                        } else {
+                            throw new Error(`Strukturfehler bei Frage ${blockIdx + 1}. Bitte überprüfe das Format.`);
+                        }
+                    });
+                } catch (e) {
+                    showFeedback(e.message, "error");
+                    return;
+                }
+            } else {
+                try {
+                    const parsed = JSON.parse(rawInput);
+                    if (!Array.isArray(parsed)) {
+                        throw new Error("Das JSON-Format muss ein Array ([...]) von Objekten sein.");
+                    }
+
+                    parsed.forEach((item, index) => {
+                        if (!item.question || !Array.isArray(item.options) || item.options.length < 2 || item.correctAnswer === undefined) {
+                            throw new Error(`Eintrag bei Index ${index} besitzt unvollständige Felder.`);
+                        }
+                        const ans = parseInt(item.correctAnswer);
+                        if (isNaN(ans) || ans < 0 || ans >= item.options.length) {
+                            throw new Error(`Eintrag bei Index ${index} hat einen ungültigen Antwort-Index.`);
+                        }
+                        importedList.push({
+                            question: item.question,
+                            options: item.options,
+                            correctAnswer: ans,
+                            explanation: item.explanation || "Keine zusätzliche Erklärung angegeben.",
+                            image: item.image || null
+                        });
+                    });
+                } catch (e) {
+                    showFeedback(`JSON-Fehler: ${e.message}`, "error");
+                    return;
+                }
+            }
+
+            questions = importedList;
+            updateLoadedCount();
+            document.getElementById('quiz-mode-badge').innerText = "Eigenes Set";
+            
+            if (currentTheme === 'modern') {
+                document.getElementById('quiz-mode-badge').className = "bg-blue-600/20 text-blue-400 px-3 py-1.5 rounded-full font-medium uppercase tracking-wider border border-blue-500/20";
+            } else {
+                document.getElementById('quiz-mode-badge').className = "bg-white text-black px-3 py-1.5 border border-black font-mono font-bold text-xs uppercase";
+            }
+            
+            showFeedback(`${questions.length} Frage(n) erfolgreich geladen und aktiv!`, "success");
+            
+            setTimeout(() => {
+                toggleImportPanel(false);
+            }, 1200);
+        }
+
+        function startQuiz() {
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('result-screen').classList.add('hidden');
+            document.getElementById('quiz-screen').classList.remove('hidden');
+            
+            // Timer-Einstellung einlesen
+            isTimerEnabled = document.getElementById('timer-toggle').checked;
+            const timerContainer = document.getElementById('timer-container');
+            if (isTimerEnabled) {
+                timerContainer.classList.remove('hidden');
+            } else {
+                timerContainer.classList.add('hidden');
+            }
+
+            // Fragen-Anzahl einlesen
+            const countSelect = document.getElementById('question-count-select');
+            let selectedCount = countSelect.value === 'all' ? questions.length : parseInt(countSelect.value);
+
+            // Shuffling auf Basis aller geladenen Fragen
+            quizQuestions = [...questions];
+            shuffleArray(quizQuestions);
+            
+            // Pool-Schutz
+            if (selectedCount > quizQuestions.length) {
+                selectedCount = quizQuestions.length;
+            }
+
+            quizQuestions = quizQuestions.slice(0, selectedCount);
+
+            currentQuestionIndex = 0;
+            score = 0;
+            loadQuestion();
+        }
+
+        function startTimer() {
+            clearInterval(timerInterval);
+            timeLeft = timerDuration;
+            
+            const badge = document.getElementById('timer-badge');
+            const bar = document.getElementById('timer-bar');
+            
+            badge.innerText = `${timeLeft}s`;
+            badge.className = "font-mono font-bold bg-slate-900/50 px-2 py-0.5 rounded text-amber-400";
+            bar.style.width = "100%";
+            bar.className = "bg-amber-500 h-full linear-timer";
+
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                badge.innerText = `${timeLeft}s`;
+                
+                const percent = (timeLeft / timerDuration) * 100;
+                bar.style.width = `${percent}%`;
+
+                if (timeLeft <= 10) {
+                    if (currentTheme === 'modern') {
+                        badge.className = "font-mono font-bold bg-rose-950 px-2 py-0.5 rounded text-rose-400 animate-pulse";
+                        bar.className = "bg-rose-500 h-full linear-timer";
+                    } else {
+                        badge.className = "font-mono font-bold bg-black px-2 py-0.5 text-red-500";
+                        bar.className = "bg-red-600 h-full linear-timer";
+                    }
+                }
+
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    checkAnswer(true); // Zeit abgelaufen!
+                }
+            }, 1000);
+        }
+
+        function stopTimer() {
+            clearInterval(timerInterval);
+        }
+
+        // LIGHTBOX-FUNKTIONEN
+        function openLightbox(src) {
+            const modal = document.getElementById('lightbox-modal');
+            const img = document.getElementById('lightbox-img');
+            img.src = src;
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden'; // Hintergrund-Scrollen deaktivieren
+        }
+
+        function closeLightbox(event) {
+            if (event) {
+                event.stopPropagation();
+            }
+            const modal = document.getElementById('lightbox-modal');
+            modal.classList.add('hidden');
+            document.body.style.overflow = ''; // Scrollen wieder aktivieren
+        }
+
+        // VISUALISIERUNG UND FALLBACKS
+        function showPlaceholderFallback() {
+            const container = document.getElementById('visual-container');
+            
+            if (currentTheme === 'modern') {
+                container.innerHTML = `
+                    <svg viewBox="0 0 400 180" class="w-full h-56 text-slate-500 select-none">
+                        <style>
+                            .grid-line { stroke: rgba(59, 130, 246, 0.08); stroke-width: 1; }
+                            .node { fill: #0f172a; stroke: #3b82f6; stroke-width: 2; }
+                            .conn { stroke: #334155; stroke-width: 1.5; stroke-dasharray: 4 4; }
+                            .pulse-circle { animation: pulse 2.5s infinite ease-out; transform-origin: center; }
+                            @keyframes pulse {
+                                0% { r: 5; opacity: 1; stroke: #60a5fa; }
+                                100% { r: 25; opacity: 0; stroke: #3b82f6; }
+                            }
+                        </style>
+                        <line x1="50" y1="0" x2="50" y2="180" class="grid-line" />
+                        <line x1="150" y1="0" x2="150" y2="180" class="grid-line" />
+                        <line x1="250" y1="0" x2="250" y2="180" class="grid-line" />
+                        <line x1="350" y1="0" x2="350" y2="180" class="grid-line" />
+                        <line x1="0" y1="35" x2="400" y2="35" class="grid-line" />
+                        <line x1="0" y1="90" x2="400" y2="90" class="grid-line" />
+                        <line x1="0" y1="145" x2="400" y2="145" class="grid-line" />
+                        
+                        <line x1="100" y1="90" x2="200" y2="45" class="conn" />
+                        <line x1="100" y1="90" x2="200" y2="135" class="conn" />
+                        <line x1="200" y1="45" x2="300" y2="90" class="conn" />
+                        <line x1="200" y1="135" x2="300" y2="90" class="conn" />
+                        <line x1="200" y1="45" x2="200" y2="135" class="conn" />
+
+                        <circle cx="200" cy="90" r="5" fill="none" class="pulse-circle" />
+                        <circle cx="200" cy="90" r="4" fill="#3b82f6" />
+
+                        <circle cx="100" cy="90" r="10" class="node" />
+                        <circle cx="200" cy="45" r="10" class="node" />
+                        <circle cx="200" cy="135" r="10" class="node" />
+                        <circle cx="300" cy="90" r="10" class="node" />
+
+                        <path d="M 97 90 L 103 90 M 100 87 L 100 93" stroke="#3b82f6" stroke-width="1.5" />
+                        <path d="M 197 45 L 203 45 M 200 42 L 200 48" stroke="#3b82f6" stroke-width="1.5" />
+                        <path d="M 197 135 L 203 135 M 200 132 L 200 138" stroke="#3b82f6" stroke-width="1.5" />
+                        <path d="M 297 90 L 303 90 M 300 87 L 300 93" stroke="#3b82f6" stroke-width="1.5" />
+
+                        <rect x="120" y="77" width="160" height="26" rx="6" fill="#0f172a" stroke="#334155" stroke-width="1.5" />
+                        <text x="200" y="94" fill="#94a3b8" font-size="11" font-family="monospace" text-anchor="middle" font-weight="600" letter-spacing="0.5">Topologie-Szenario</text>
+                    </svg>
+                `;
+            } else {
+                // RETRO MONITOR GRÜN-SCHWARZ PLATZHALTER
+                container.innerHTML = `
+                    <svg viewBox="0 0 400 180" class="w-full h-56 select-none font-mono text-emerald-500 fill-none stroke-emerald-500">
+                        <style>
+                            @keyframes flicker {
+                                0% { opacity: 0.95; }
+                                100% { opacity: 1; }
+                            }
+                            .retro-terminal { animation: flicker 0.15s infinite; }
+                            .retro-green-node { fill: #000000; stroke: #10b981; stroke-width: 2; }
+                            .retro-green-line { stroke: #10b981; stroke-width: 1.5; stroke-dasharray: 6 3; }
+                        </style>
+                        <g class="retro-terminal">
+                            <!-- Grid Background -->
+                            <path d="M 0,20 L 400,20 M 0,50 L 400,50 M 0,80 L 400,80 M 0,110 L 400,110 M 0,140 L 400,140 M 0,170 L 400,170" stroke="#042f2e" stroke-width="0.5" />
+                            <path d="M 40,0 L 40,180 M 100,0 L 100,180 M 160,0 L 160,180 M 220,0 L 220,180 M 280,0 L 280,180 M 340,0 L 340,180" stroke="#042f2e" stroke-width="0.5" />
+                            
+                            <!-- Wireframe network -->
+                            <line x1="120" y1="90" x2="200" y2="45" class="retro-green-line" />
+                            <line x1="120" y1="90" x2="200" y2="135" class="retro-green-line" />
+                            <line x1="200" y1="45" x2="280" y2="90" class="retro-green-line" />
+                            <line x1="200" y1="135" x2="280" y2="90" class="retro-green-line" />
+                            <line x1="200" y1="45" x2="200" y2="135" class="retro-green-line" />
+
+                            <circle cx="120" cy="90" r="12" class="retro-green-node" />
+                            <circle cx="200" cy="45" r="12" class="retro-green-node" />
+                            <circle cx="200" cy="135" r="12" class="retro-green-node" />
+                            <circle cx="280" cy="90" r="12" class="retro-green-node" />
+
+                            <!-- Terminal Overlay Text -->
+                            <rect x="5" y="5" width="105" height="18" fill="#000000" stroke="#10b981" />
+                            <text x="10" y="17" font-size="9" fill="#10b981" stroke="none">SYS.STATUS: OK</text>
+                            
+                            <text x="390" y="20" font-size="9" fill="#10b981" stroke="none" text-anchor="end">DRV_A:\\NET_DIAG.EXE</text>
+                            <text x="200" y="94" font-size="10" fill="#10b981" stroke="none" text-anchor="middle" font-weight="bold">TOPOLOGIE SYSTEM v1.95</text>
+                        </g>
+                    </svg>
+                `;
+            }
+        }
+
+        function loadQuestion() {
+            isAnswerChecked = false;
+            selectedOptionIndex = null;
+            
+            const q = quizQuestions[currentQuestionIndex];
+            
+            document.getElementById('current-question-num').innerText = currentQuestionIndex + 1;
+            document.getElementById('total-questions-num').innerText = quizQuestions.length;
+            document.getElementById('current-score').innerText = score;
+            
+            const progressPercent = ((currentQuestionIndex + 1) / quizQuestions.length) * 100;
+            document.getElementById('progress-bar').style.width = `${progressPercent}%`;
+
+            document.getElementById('question-text').innerText = q.question;
+
+            // DIAGRAM & PLACEHOLDER HANDLING
+            const visualContainer = document.getElementById('visual-container');
+            if (q.image) {
+                // Image Loading with Fallback protection
+                visualContainer.innerHTML = `
+                    <img src="${q.image}" class="max-h-[240px] max-w-full object-contain rounded-lg border border-slate-700/50 p-1 bg-white shadow-inner cursor-zoom-in hover:opacity-95 transition" alt="Topologie-Diagramm" onerror="showPlaceholderFallback()" onclick="openLightbox('${q.image}')">
+                `;
+            } else {
+                showPlaceholderFallback();
+            }
+
+            const container = document.getElementById('options-container');
+            container.innerHTML = '';
+
+            q.options.forEach((option, idx) => {
+                const btn = document.createElement('button');
+                
+                if (currentTheme === 'modern') {
+                    btn.className = "w-full text-left p-4 rounded-xl border border-slate-700 bg-slate-800/50 hover:bg-slate-700/50 hover:border-slate-500 transition duration-150 flex items-center justify-between group focus:outline-none focus:ring-2 focus:ring-blue-500/50";
+                    btn.innerHTML = `
+                        <span class="text-sm md:text-base text-slate-200 group-hover:text-white font-medium">${option}</span>
+                        <span class="w-5 h-5 rounded-full border border-slate-600 flex items-center justify-center text-xs text-transparent group-hover:border-slate-400 transition">
+                            <i class="fas fa-check"></i>
+                        </span>
+                    `;
+                } else {
+                    btn.className = "w-full text-left p-3 border-2 border-black bg-gray-200 hover:bg-gray-300 flex items-center justify-between font-mono text-sm font-bold text-black focus:outline-none";
+                    btn.innerHTML = `
+                        <span>${String.fromCharCode(65 + idx)}) ${option}</span>
+                        <span class="w-4 h-4 border border-black bg-white flex items-center justify-center text-xs text-transparent font-bold">
+                            X
+                        </span>
+                    `;
+                }
+                btn.onclick = () => selectOption(idx);
+                container.appendChild(btn);
+            });
+
+            document.getElementById('explanation-box').classList.add('hidden');
+            const actionBtn = document.getElementById('action-btn');
+            actionBtn.innerText = "Antwort prüfen";
+            actionBtn.disabled = true;
+            actionBtn.onclick = () => checkAnswer(false);
+            
+            if (currentTheme === 'modern') {
+                actionBtn.className = "w-full sm:w-auto bg-blue-600 disabled:bg-slate-700 disabled:text-slate-400 disabled:cursor-not-allowed hover:bg-blue-500 text-white font-semibold px-6 py-3 rounded-xl transition duration-200";
+            } else {
+                actionBtn.className = "w-full sm:w-auto px-6 py-2 bg-gray-300 font-mono font-bold text-black border-2 border-black disabled:text-gray-500 disabled:border-gray-400";
+            }
+
+            if (isTimerEnabled) {
+                startTimer();
+            }
+        }
+
+        function selectOption(index) {
+            if (isAnswerChecked) return;
+
+            selectedOptionIndex = index;
+            const container = document.getElementById('options-container');
+            const buttons = container.querySelectorAll('button');
+
+            buttons.forEach((btn, idx) => {
+                const circle = btn.querySelector('span:last-child');
+                if (idx === index) {
+                    if (currentTheme === 'modern') {
+                        btn.className = "w-full text-left p-4 rounded-xl border-2 border-blue-500 bg-blue-500/10 transition duration-150 flex items-center justify-between focus:outline-none";
+                        circle.className = "w-5 h-5 rounded-full bg-blue-500 text-white flex items-center justify-center text-xs border border-blue-500";
+                    } else {
+                        btn.className = "w-full text-left p-3 border-2 border-black bg-white flex items-center justify-between font-mono text-sm font-bold text-black focus:outline-none";
+                        circle.className = "w-4 h-4 border border-black bg-black text-white flex items-center justify-center text-xs";
+                    }
+                } else {
+                    if (currentTheme === 'modern') {
+                        btn.className = "w-full text-left p-4 rounded-xl border border-slate-700 bg-slate-800/50 hover:bg-slate-700/50 transition duration-150 flex items-center justify-between focus:outline-none";
+                        circle.className = "w-5 h-5 rounded-full border border-slate-600 flex items-center justify-center text-xs text-transparent";
+                    } else {
+                        btn.className = "w-full text-left p-3 border-2 border-black bg-gray-200 hover:bg-gray-300 flex items-center justify-between font-mono text-sm font-bold text-black focus:outline-none";
+                        circle.className = "w-4 h-4 border border-black bg-white flex items-center justify-center text-xs text-transparent";
+                    }
+                }
+            });
+
+            document.getElementById('action-btn').disabled = false;
+        }
+
+        function checkAnswer(isTimeout = false) {
+            if (isAnswerChecked) return;
+
+            isAnswerChecked = true;
+            stopTimer(); // Timer anhalten
+
+            const q = quizQuestions[currentQuestionIndex];
+            const container = document.getElementById('options-container');
+            const buttons = container.querySelectorAll('button');
+            const explanationBox = document.getElementById('explanation-box');
+            const explanationTitle = document.getElementById('explanation-title');
+            const explanationText = document.getElementById('explanation-text');
+            const explanationIcon = document.getElementById('explanation-icon');
+
+            const isCorrect = (selectedOptionIndex === q.correctAnswer);
+
+            if (isCorrect && !isTimeout) {
+                score++;
+                document.getElementById('current-score').innerText = score;
+            }
+
+            buttons.forEach((btn, idx) => {
+                const circle = btn.querySelector('span:last-child');
+                btn.disabled = true;
+                btn.onclick = null;
+
+                if (idx === q.correctAnswer) {
+                    if (currentTheme === 'modern') {
+                        btn.className = "w-full text-left p-4 rounded-xl border-2 border-emerald-500 bg-emerald-500/10 transition duration-150 flex items-center justify-between text-emerald-400 font-semibold";
+                        circle.className = "w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center text-xs border border-emerald-500";
+                        circle.innerHTML = `<i class="fas fa-check"></i>`;
+                    } else {
+                        btn.className = "w-full text-left p-3 border-2 border-emerald-600 bg-emerald-100 flex items-center justify-between font-mono text-sm font-bold text-emerald-800";
+                        circle.className = "w-4 h-4 border border-emerald-600 bg-emerald-600 text-white flex items-center justify-center text-xs";
+                        circle.innerText = "✓";
+                    }
+                } else if (idx === selectedOptionIndex && !isCorrect) {
+                    if (currentTheme === 'modern') {
+                        btn.className = "w-full text-left p-4 rounded-xl border-2 border-rose-500 bg-rose-500/10 transition duration-150 flex items-center justify-between text-rose-400 font-semibold";
+                        circle.className = "w-5 h-5 rounded-full bg-rose-500 text-white flex items-center justify-center text-xs border border-rose-500";
+                        circle.innerHTML = `<i class="fas fa-times"></i>`;
+                    } else {
+                        btn.className = "w-full text-left p-3 border-2 border-red-600 bg-red-100 flex items-center justify-between font-mono text-sm font-bold text-red-800";
+                        circle.className = "w-4 h-4 border border-red-600 bg-red-600 text-white flex items-center justify-center text-xs";
+                        circle.innerText = "X";
+                    }
+                } else {
+                    if (currentTheme === 'modern') {
+                        btn.className = "w-full text-left p-4 rounded-xl border border-slate-800 bg-slate-900/30 opacity-40 transition duration-150 flex items-center justify-between text-slate-500";
+                        circle.className = "hidden";
+                    } else {
+                        btn.className = "w-full text-left p-3 border border-gray-400 bg-gray-100 opacity-40 flex items-center justify-between font-mono text-sm text-gray-500";
+                        circle.className = "hidden";
+                    }
+                }
+            });
+
+            explanationText.innerText = q.explanation;
+            explanationBox.classList.remove('hidden');
+
+            if (isTimeout) {
+                if (currentTheme === 'modern') {
+                    explanationBox.className = "p-4 rounded-xl border border-amber-500/30 bg-amber-500/5 text-amber-300";
+                    explanationTitle.innerText = "Zeit abgelaufen!";
+                    explanationIcon.innerHTML = `<i class="fas fa-hourglass-end text-amber-500 text-xl"></i>`;
+                } else {
+                    explanationBox.className = "p-4 border-2 border-black bg-yellow-100 text-black";
+                    explanationTitle.innerText = "ZEIT ABGELAUFEN!";
+                    explanationIcon.innerHTML = `[!]`;
+                }
+            } else if (isCorrect) {
+                if (currentTheme === 'modern') {
+                    explanationBox.className = "p-4 rounded-xl border border-emerald-500/30 bg-emerald-500/5 text-emerald-300";
+                    explanationTitle.innerText = "Korrekt!";
+                    explanationIcon.innerHTML = `<i class="fas fa-check-circle text-emerald-500 text-xl"></i>`;
+                } else {
+                    explanationBox.className = "p-4 border-2 border-emerald-600 bg-emerald-100 text-black";
+                    explanationTitle.innerText = "KORREKT!";
+                    explanationIcon.innerHTML = `[*]`;
+                }
+            } else {
+                if (currentTheme === 'modern') {
+                    explanationBox.className = "p-4 rounded-xl border border-rose-500/30 bg-rose-500/5 text-rose-300";
+                    explanationTitle.innerText = "Leider falsch!";
+                    explanationIcon.innerHTML = `<i class="fas fa-exclamation-circle text-rose-500 text-xl"></i>`;
+                } else {
+                    explanationBox.className = "p-4 border-2 border-red-600 bg-red-100 text-black";
+                    explanationTitle.innerText = "FALSCH!";
+                    explanationIcon.innerHTML = `[X]`;
+                }
+            }
+
+            const actionBtn = document.getElementById('action-btn');
+            actionBtn.disabled = false;
+            if (currentQuestionIndex < quizQuestions.length - 1) {
+                actionBtn.innerText = "Nächste Frage";
+                actionBtn.onclick = nextQuestion;
+            } else {
+                actionBtn.innerText = "Auswertung anzeigen";
+                actionBtn.onclick = showResults;
+            }
+            
+            if (currentTheme === 'modern') {
+                actionBtn.className = "w-full sm:w-auto bg-slate-100 hover:bg-white text-slate-900 font-semibold px-6 py-3 rounded-xl transition duration-200";
+            } else {
+                actionBtn.className = "w-full sm:w-auto px-6 py-2 bg-gray-300 font-mono font-bold text-black border-2 border-black";
+            }
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            loadQuestion();
+        }
+
+        function showResults() {
+            document.getElementById('quiz-screen').classList.add('hidden');
+            document.getElementById('result-screen').classList.remove('hidden');
+
+            const finalScore = document.getElementById('final-score');
+            const percentage = document.getElementById('percentage');
+            const performanceTag = document.getElementById('performance-tag');
+            const resultMessage = document.getElementById('result-message');
+            const resultEmojiContainer = document.getElementById('result-emoji-container');
+            const resultIcon = document.getElementById('result-icon');
+
+            finalScore.innerText = `${score}/${quizQuestions.length}`;
+            const percentValue = Math.round((score / quizQuestions.length) * 100);
+            percentage.innerText = `${percentValue}%`;
+
+            if (percentValue >= 90) {
+                performanceTag.innerText = "Hervorragend!";
+                if (currentTheme === 'modern') {
+                    performanceTag.className = "block text-sm font-semibold px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400";
+                    resultEmojiContainer.className = "w-20 h-20 bg-emerald-500/10 text-emerald-500 rounded-full flex items-center justify-center mx-auto border border-emerald-500/30";
+                } else {
+                    performanceTag.className = "block font-mono text-xs font-bold border border-emerald-600 bg-emerald-100 text-emerald-800 px-3 py-1";
+                    resultEmojiContainer.className = "w-16 h-16 bg-white border-2 border-black flex items-center justify-center mx-auto text-emerald-600";
+                }
+                resultMessage.innerText = "Fantastisch! Du hast die Netzwerktopologien absolut verstanden. Mit diesem Wissensstand bist du hervorragend für Prüfungsfragen gewappnet!";
+                resultIcon.className = "fas fa-trophy text-4xl";
+            } else if (percentValue >= 70) {
+                performanceTag.innerText = "Bestanden";
+                if (currentTheme === 'modern') {
+                    performanceTag.className = "block text-sm font-semibold px-3 py-1 rounded-full bg-blue-500/20 text-blue-400";
+                    resultEmojiContainer.className = "w-20 h-20 bg-blue-500/10 text-blue-500 rounded-full flex items-center justify-center mx-auto border border-blue-500/30";
+                } else {
+                    performanceTag.className = "block font-mono text-xs font-bold border border-blue-600 bg-blue-100 text-blue-800 px-3 py-1";
+                    resultEmojiContainer.className = "w-16 h-16 bg-white border-2 border-black flex items-center justify-center mx-auto text-blue-850";
+                }
+                resultMessage.innerText = "Gute Arbeit! Die Kernkonzepte sitzen solide. Schau dir die falschen Antworten und die Erklärungen noch einmal an, um den Wissensstand perfekt abzurunden.";
+                resultIcon.className = "fas fa-thumbs-up text-4xl";
+            } else {
+                performanceTag.innerText = "Wiederholen";
+                if (currentTheme === 'modern') {
+                    performanceTag.className = "block text-sm font-semibold px-3 py-1 rounded-full bg-amber-500/20 text-amber-400";
+                    resultEmojiContainer.className = "w-20 h-20 bg-amber-500/10 text-amber-500 rounded-full flex items-center justify-center mx-auto border border-amber-500/30";
+                } else {
+                    performanceTag.className = "block font-mono text-xs font-bold border border-red-600 bg-red-100 text-red-800 px-3 py-1";
+                    resultEmojiContainer.className = "w-16 h-16 bg-white border-2 border-black flex items-center justify-center mx-auto text-red-600";
+                }
+                resultMessage.innerText = "Das reicht leider noch nicht ganz für eine sichere Note. Kein Problem! Nutze die eingebauten Erklärungen, passe deine Fragen-Dateien an und wiederhole das Quiz einfach.";
+                resultIcon.className = "fas fa-sync-alt text-4xl";
+            }
+        }
+
+        function restartQuiz() {
+            startQuiz();
+        }
+
+        function showStartScreen() {
+            stopTimer();
+            document.getElementById('quiz-screen').classList.add('hidden');
+            document.getElementById('result-screen').classList.add('hidden');
+            document.getElementById('start-screen').classList.remove('hidden');
+        }
+    </script>
 </body>
 </html>

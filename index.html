@@ -1,106 +1,1426 @@
-
 <!DOCTYPE html>
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Netzwerk-Prüfungs-Coach</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interaktives Quiz mit Retro-Laufwerk</title>
+    <!-- CSS-FRAMEWORK & RETRO-FONTS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- JSZIP ZUM DIREKTEN ZIP-ENTPACKEN IM BROWSER-ARBEITSSPEICHER -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght=300;400;500;600;700&family=VT323&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        /* Lineares Herunterzählen des Timers */
+        .linear-timer {
+            transition: width 1s linear;
+        }
+
+        /* RETRO WINDOWS 95 OVERRIDES */
+        .retro-mode {
+            background-color: #008080 !important; /* Classic Windows 95 Teal */
+            color: #000000 !important;
+            font-family: 'Courier New', Courier, monospace !important;
+        }
+
+        .retro-mode #quiz-card, 
+        .retro-mode header,
+        .retro-mode footer {
+            background-color: #c0c0c0 !important;
+            border: 3px double #ffffff !important;
+            box-shadow: inset -1.5px -1.5px #0a0a0a, inset 1.5px 1.5px #dfdfdf, 1.5px 1.5px #0a0a0a, -1.5px -1.5px #dfdfdf !important;
+            color: #000000 !important;
+            border-radius: 0px !important;
+        }
+
+        .retro-mode header {
+            border-bottom: 3px solid #808080 !important;
+        }
+
+        .retro-mode button, 
+        .retro-mode select {
+            background-color: #c0c0c0 !important;
+            color: #000000 !important;
+            border-radius: 0px !important;
+            border: 2px solid !important;
+            border-color: #ffffff #808080 #808080 #ffffff !important;
+            font-weight: bold !important;
+            box-shadow: none !important;
+            transform: none !important;
+        }
+
+        .retro-mode button:active:not(:disabled) {
+            border-color: #808080 #ffffff #ffffff #808080 !important;
+            padding-top: 2px;
+            padding-left: 2px;
+        }
+
+        .retro-mode button:disabled {
+            color: #808080 !important;
+            border-color: #ffffff #808080 #808080 #ffffff !important;
+            cursor: not-allowed !important;
+        }
+
+        .retro-mode .text-white,
+        .retro-mode .text-slate-100,
+        .retro-mode .text-slate-200,
+        .retro-mode .text-slate-300 {
+            color: #000000 !important;
+        }
+
+        .retro-mode .text-blue-400,
+        .retro-mode .text-emerald-500,
+        .retro-mode .text-emerald-400 {
+            color: #000080 !important; /* Win95 Dark Blue */
+            font-weight: bold;
+        }
+
+        .retro-mode .bg-slate-900,
+        .retro-mode .bg-slate-900\/40,
+        .retro-mode .bg-slate-900\/50,
+        .retro-mode .bg-slate-900\/60 {
+            background-color: #ffffff !important;
+            border: 2px solid #808080 !important;
+            color: #000000 !important;
+            border-radius: 0px !important;
+            box-shadow: inset 1px 1px #0a0a0a !important;
+        }
+
+        .retro-mode textarea {
+            background-color: #ffffff !important;
+            color: #000000 !important;
+            font-family: 'Courier New', Courier, monospace !important;
+            border-radius: 0px !important;
+        }
+
+        /* Retro CRT Monitor für Grafik-Box */
+        .retro-mode #visual-container {
+            background-color: #051405 !important;
+            border: 4px solid #808080 !important;
+            box-shadow: inset 3px 3px #000000 !important;
+            border-radius: 0px !important;
+        }
+
+        /* 3.5" Diskette Animationen */
+        #floppy-disk {
+            transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.5s ease;
+        }
+        .floppy-inserted {
+            transform: translateY(110px) scale(0.7) rotateX(15deg);
+            opacity: 0.15;
+            pointer-events: none;
+        }
+
+        /* LED Indicator */
+        .led-active {
+            animation: led-blink 0.2s infinite alternate;
+        }
+        @keyframes led-blink {
+            0% { background-color: #4ade80; box-shadow: 0 0 2px #4ade80; }
+            100% { background-color: #166534; box-shadow: 0 0 8px #22c55e; }
+        }
+    </style>
 </head>
-<body class="bg-slate-900 text-slate-100 min-h-screen p-4 md:p-8">
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col justify-between">
 
-    <main class="max-w-2xl mx-auto bg-slate-800 p-6 rounded-2xl shadow-2xl border border-slate-700">
-        <h1 class="text-2xl font-bold mb-2">Netzwerk-Prüfungs-Coach</h1>
-        <div id="status-panel" class="mb-6 p-4 bg-slate-900 border border-slate-600 rounded-xl">
-            <p id="source-indicator" class="text-amber-400 font-medium">Status: Bereit. Bitte ZIP-Diskette oder JSON einlegen.</p>
+    <!-- Header -->
+    <header class="bg-slate-800 border-b border-slate-700 py-4 px-6 shadow-md transition-all duration-300">
+        <div class="max-w-4xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div class="flex items-center space-x-3">
+                <div class="bg-blue-600 p-2 rounded-lg text-white font-bold" id="header-logo-container">
+                    <i class="fas fa-network-wired text-xl" id="header-icon"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg tracking-wide" id="app-title">IT-Prüfungsvorbereitung</h1>
+                    <p class="text-xs text-slate-400" id="app-subtitle">Diskettensystem v1.95</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center space-x-3">
+                <span id="quiz-mode-badge" class="bg-slate-700 text-xs text-slate-300 px-3 py-1.5 rounded-full font-medium uppercase tracking-wider">
+                    Standard-Modus
+                </span>
+                <!-- THEME SWITCHER -->
+                <div class="flex bg-slate-900 p-0.5 rounded-lg border border-slate-700 overflow-hidden" id="theme-selectors">
+                    <button onclick="setTheme('modern')" id="theme-btn-modern" class="px-3 py-1 text-xs font-semibold rounded bg-blue-600 text-white transition">
+                        Modern
+                    </button>
+                    <button onclick="setTheme('retro')" id="theme-btn-retro" class="px-3 py-1 text-xs font-semibold rounded text-slate-400 hover:text-slate-200 transition">
+                        Retro 95
+                    </button>
+                </div>
+            </div>
         </div>
+    </header>
 
-        <input type="file" id="file-input" accept=".json,.zip" class="w-full text-sm text-slate-400 border border-slate-700 rounded-xl bg-slate-700 p-3 mb-6">
+    <!-- Main Content Container -->
+    <main class="flex-grow flex items-center justify-center p-4 md:p-8">
+        <div class="max-w-2xl w-full bg-slate-800 rounded-2xl shadow-2xl border border-slate-700/80 overflow-hidden transition-all duration-300" id="quiz-card">
+            
+            <!-- START SCREEN -->
+            <div id="start-screen" class="p-8 text-center space-y-6">
+                <div class="w-20 h-20 bg-blue-500/10 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-4 border border-blue-500/30" id="start-logo">
+                    <i class="fas fa-graduation-cap text-4xl"></i>
+                </div>
+                <h2 class="text-2xl font-bold text-white" id="start-title">Bist du bereit für den Topologie-Check?</h2>
+                <p class="text-slate-300 text-sm md:text-base leading-relaxed max-w-md mx-auto" id="start-desc">
+                    Lade deine eigenen Lernsätze direkt im Browser, ohne Internetverbindung – genau wie eine Diskette!
+                </p>
+                
+                <div class="bg-slate-900/50 p-4 rounded-xl border border-slate-700/50 text-left space-y-2 max-w-md mx-auto text-xs text-slate-400" id="info-badge-panel">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-2">
+                            <i class="fas fa-check-circle text-emerald-500"></i>
+                            <span><strong id="loaded-questions-count">23</strong> Fragen einsatzbereit</span>
+                        </div>
+                        <button onclick="exportQuestionsAsJson()" class="text-blue-400 hover:text-blue-300 flex items-center space-x-1 font-semibold transition" title="Als JSON auf den Desktop herunterladen" id="btn-export-backup">
+                            <i class="fas fa-download mr-1"></i> Vorlage sichern
+                        </button>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <i class="fas fa-database text-blue-400"></i>
+                        <span>Datenquelle: <strong id="active-source-indicator" class="text-emerald-400">Standard-System (Offline-Modus)</strong></span>
+                    </div>
+                    
+                    <!-- FRAGEN-VORSCHAU FÜR ECHTEN LADEBELEG -->
+                    <div class="flex items-start space-x-2 mt-1 pt-1 border-t border-slate-700/30 text-[11px] text-slate-400" id="preview-container">
+                        <i class="fas fa-eye text-blue-400 mt-0.5"></i>
+                        <span>Vorschau Frage 1: <em id="preview-question-text" class="text-slate-300">"Was unterscheidet die physische..."</em></span>
+                    </div>
 
-        <div id="quiz-container" class="hidden space-y-6">
-            <!-- Fortschritt -->
-            <div class="w-full bg-slate-700 h-2 rounded-full overflow-hidden">
-                <div id="progress-bar" class="bg-blue-500 h-full w-0 transition-all duration-300"></div>
+                    <div class="flex items-center space-x-2">
+                        <i class="fas fa-random text-emerald-500"></i>
+                        <span><strong>Zufallsmodus aktiv:</strong> Fragen werden bei jedem Durchlauf gemischt!</span>
+                    </div>
+                </div>
+
+                <!-- SETTINGS DASHBOARD -->
+                <div class="bg-slate-900/40 p-4 rounded-xl border border-slate-700/50 max-w-md mx-auto space-y-4 text-left" id="settings-dashboard">
+                    <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1" id="settings-title">Spiel-Einstellungen</h4>
+                    
+                    <!-- QUESTIONS COUNT SELECTOR -->
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <div class="text-blue-500 bg-blue-500/10 p-2 rounded-lg" id="qcount-icon-bg">
+                                <i class="fas fa-list-ol text-sm"></i>
+                            </div>
+                            <div>
+                                <p class="text-xs font-semibold text-slate-200" id="label-qcount">Anzahl der Fragen</p>
+                                <p class="text-[10px] text-slate-400" id="sublabel-qcount">Zufällige Ziehung aus dem Pool</p>
+                            </div>
+                        </div>
+                        <select id="question-count-select" class="bg-slate-800 border border-slate-700 text-xs text-slate-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer">
+                            <option value="10" selected>10 Fragen</option>
+                            <option value="20">20 Fragen</option>
+                            <option value="30">30 Fragen</option>
+                            <option value="all">Alle Fragen</option>
+                        </select>
+                    </div>
+
+                    <div class="border-t border-slate-700 my-2" id="settings-divider"></div>
+
+                    <!-- TIMER SWITCH SETTING -->
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <div class="text-amber-500 bg-amber-500/10 p-2 rounded-lg" id="timer-icon-bg">
+                                <i class="fas fa-stopwatch text-sm"></i>
+                            </div>
+                            <div>
+                                <p class="text-xs font-semibold text-slate-200" id="label-timer">Zeitlimit (30s pro Frage)</p>
+                                <p class="text-[10px] text-slate-400" id="sublabel-timer">Automatischer Countdown</p>
+                            </div>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer" id="timer-toggle-label">
+                            <input type="checkbox" id="timer-toggle" class="sr-only peer">
+                            <div class="w-9 h-5 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-400 after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600" id="timer-toggle-switch"></div>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="flex flex-col sm:flex-row gap-3 justify-center max-w-md mx-auto pt-2">
+                    <button id="btn-start" onclick="startQuiz()" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-semibold px-6 py-3.5 rounded-xl shadow-lg shadow-blue-600/20 transition duration-200 transform hover:-translate-y-0.5 active:translate-y-0">
+                        Quiz starten <i class="fas fa-arrow-right ml-2"></i>
+                    </button>
+                    <button id="btn-toggle-import" onclick="toggleImportPanel(true)" class="flex-1 bg-slate-700 hover:bg-slate-600 text-slate-200 font-semibold px-6 py-3.5 rounded-xl border border-slate-600 transition duration-200">
+                        <i class="fas fa-file-import mr-2"></i> JSON / Diskette laden
+                    </button>
+                </div>
             </div>
 
-            <h2 id="q-text" class="text-xl font-semibold leading-relaxed">Frage...</h2>
-            <div id="options-box" class="grid gap-3"></div>
-            
-            <div id="feedback-box" class="hidden p-4 rounded-xl border"></div>
-            <button id="next-btn" class="hidden w-full bg-blue-600 hover:bg-blue-500 py-3 rounded-xl font-bold transition">Nächste Frage</button>
+            <!-- IMPORT PANEL (Mit Dateiuploader, Retro-Diskette und Drag&Drop) -->
+            <div id="import-panel" class="hidden p-6 md:p-8 space-y-6">
+                <div class="flex justify-between items-center border-b border-slate-700 pb-4" id="import-header">
+                    <div class="flex items-center space-x-2">
+                        <i class="fas fa-file-import text-blue-500 text-xl" id="import-title-icon"></i>
+                        <h2 class="text-xl font-bold text-white" id="import-title">Fragen einspielen</h2>
+                    </div>
+                    <button onclick="toggleImportPanel(false)" class="text-slate-400 hover:text-white text-lg transition" id="btn-close-import">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                <!-- Dateiupload-Bereich / DISKETTE -->
+                <div class="space-y-2">
+                    <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider" id="label-upload">Laufwerk A: ZIP-Diskette oder JSON einschieben</label>
+                    <div id="drop-zone" class="border-2 border-dashed border-slate-700 hover:border-blue-500 rounded-xl p-6 text-center cursor-pointer transition relative group bg-slate-900/40 overflow-hidden flex flex-col justify-center items-center min-h-[190px]">
+                        <input type="file" id="file-input" accept=".json,.zip" class="absolute inset-0 opacity-0 cursor-pointer z-20" onchange="handleFileSelect(event)">
+                        
+                        <!-- DYNAMISCHES RETRO-DISKETTEN-DESIGN -->
+                        <div id="floppy-drive-ui" class="hidden flex flex-col items-center justify-center space-y-2 pointer-events-none transition-all duration-300 z-10">
+                            <!-- Floppy Drive Slot -->
+                            <div class="w-48 h-3 bg-black rounded-sm border border-slate-400 relative mb-4 flex items-center justify-between px-4">
+                                <div class="w-1.5 h-1.5 rounded-full bg-red-600 transition-colors duration-200" id="drive-led"></div>
+                                <div class="text-[8px] text-slate-400 font-mono select-none">3.5" DRIVE A:</div>
+                                <div class="w-4 h-1 bg-slate-400 rounded-sm"></div>
+                            </div>
+                            <!-- Floppy Disk -->
+                            <div id="floppy-disk" class="w-32 h-32 bg-blue-800 rounded-md p-2 flex flex-col justify-between shadow-xl relative border border-blue-950">
+                                <div class="flex justify-between items-start">
+                                    <div class="w-8 h-8 bg-slate-300 rounded-sm flex items-center justify-center">
+                                        <div class="w-4 h-6 bg-slate-500 rounded-xs"></div>
+                                    </div>
+                                    <div class="w-3 h-3 bg-blue-950 rounded-xs"></div>
+                                </div>
+                                <div class="w-full bg-slate-100 rounded-sm p-1.5 flex flex-col justify-end space-y-1 relative">
+                                    <div class="w-full h-1 bg-red-600"></div>
+                                    <div class="text-[6px] text-slate-800 font-bold tracking-tight text-center truncate font-mono" id="floppy-label-text">DISKETTE.ZIP</div>
+                                    <div class="h-3 w-1/3 bg-slate-300 self-end rounded-xs"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Modernes Design -->
+                        <div class="space-y-2 pointer-events-none z-10" id="modern-upload-ui">
+                            <i class="fas fa-file-archive text-3xl text-slate-500 group-hover:text-blue-400 transition" id="upload-icon"></i>
+                            <p class="text-sm font-semibold text-slate-300" id="upload-text">ZIP-Diskette (.zip) oder JSON (.json) hierher ziehen</p>
+                            <p class="text-xs text-slate-500" id="upload-subtext">Klicke hier, um deine Ordner am PC zu durchsuchen</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="relative flex py-2 items-center" id="import-divider">
+                    <div class="flex-grow border-t border-slate-700" id="divider-l"></div>
+                    <span class="flex-shrink mx-4 text-slate-500 text-xs uppercase tracking-widest font-semibold" id="divider-txt">Oder direkt reinkopieren</span>
+                    <div class="flex-grow border-t border-slate-700" id="divider-r"></div>
+                </div>
+
+                <div class="space-y-4">
+                    <!-- Format-Tabs -->
+                    <div class="flex bg-slate-900/60 p-1 rounded-xl border border-slate-700" id="tab-controls">
+                        <button onclick="switchImportTab('json', true)" id="tab-btn-json" class="flex-1 text-center py-2 text-xs font-semibold rounded-lg bg-blue-600 text-white transition">
+                            JSON-Code-Editor
+                        </button>
+                        <button onclick="switchImportTab('text', true)" id="tab-btn-text" class="flex-1 text-center py-2 text-xs font-semibold rounded-lg text-slate-400 hover:text-slate-200 transition">
+                            Einfacher Text
+                        </button>
+                    </div>
+
+                    <!-- Text-Area -->
+                    <div class="relative">
+                        <textarea id="import-textarea" rows="6" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-4 font-mono text-xs text-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-y" placeholder="Lade eine Vorlage..."></textarea>
+                    </div>
+
+                    <!-- Statusnachrichten -->
+                    <div id="import-feedback" class="hidden p-3 rounded-xl text-xs flex items-center space-x-2 transition-all">
+                        <!-- Wird dynamisch gefüllt -->
+                    </div>
+
+                    <!-- Aktionsbuttons im Import Panel -->
+                    <div class="flex flex-col sm:flex-row gap-3 justify-between items-center pt-2" id="import-actions">
+                        <div class="flex gap-2 w-full sm:w-auto">
+                            <button onclick="loadTemplate()" class="flex-1 sm:flex-none text-xs bg-slate-700/50 hover:bg-slate-700 text-slate-300 px-3 py-2 rounded-lg border border-slate-600/50 transition" id="btn-load-template">
+                                <i class="fas fa-paste mr-1.5"></i> Vorlage laden
+                            </button>
+                            <button onclick="clearImportText()" class="flex-1 sm:flex-none text-xs bg-slate-700/50 hover:bg-slate-700 text-rose-400 px-3 py-2 rounded-lg border border-slate-600/50 transition" id="btn-clear-import">
+                                <i class="fas fa-trash-alt mr-1.5"></i> Leeren
+                            </button>
+                        </div>
+                        <div class="flex gap-2 w-full sm:w-auto">
+                            <button onclick="toggleImportPanel(false)" class="flex-1 sm:flex-none bg-slate-700 hover:bg-slate-600 text-slate-200 font-semibold px-5 py-2.5 rounded-xl text-sm transition" id="btn-cancel-import">
+                                Abbrechen
+                            </button>
+                            <button onclick="processImport(false)" class="flex-1 sm:flex-none bg-blue-600 hover:bg-blue-500 text-white font-semibold px-5 py-2.5 rounded-xl text-sm shadow-lg shadow-blue-600/10 transition" id="btn-save-import">
+                                Speichern & Aktivieren
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- QUIZ SCREEN -->
+            <div id="quiz-screen" class="hidden p-6 md:p-8 space-y-6">
+                <!-- Fortschritt -->
+                <div class="flex justify-between items-center text-sm text-slate-400" id="progress-info">
+                    <span>Frage <strong id="current-question-num" class="text-white">1</strong> von <span id="total-questions-num">10</span></span>
+                    <span id="score-badge" class="bg-slate-700/50 px-3 py-1 rounded-md text-xs">Score: <strong id="current-score" class="text-blue-400">0</strong></span>
+                </div>
+                <!-- Fortschrittsbalken -->
+                <div class="w-full bg-slate-700 h-2 rounded-full overflow-hidden" id="progress-container">
+                    <div id="progress-bar" class="bg-blue-500 h-full transition-all duration-300" style="width: 10%"></div>
+                </div>
+
+                <!-- COUNTDOWN TIMER CONTAINER -->
+                <div id="timer-container" class="hidden space-y-1">
+                    <div class="flex justify-between items-center text-[11px] text-slate-400" id="timer-labels">
+                        <span class="flex items-center space-x-1.5">
+                            <i class="fas fa-clock text-amber-500 animate-pulse" id="timer-bell"></i>
+                            <span id="timer-desc">Verbleibende Antwortzeit</span>
+                        </span>
+                        <span id="timer-badge" class="font-mono font-bold bg-slate-900/50 px-2 py-0.5 rounded text-amber-400">30s</span>
+                    </div>
+                    <div class="w-full bg-slate-700 h-1.5 rounded-full overflow-hidden" id="timer-bar-container">
+                        <div id="timer-bar" class="bg-amber-500 h-full linear-timer" style="width: 100%"></div>
+                    </div>
+                </div>
+
+                <!-- DIAGRAM / PLACEHOLDER CONTAINER (Mit Zoom-Unterstützung) -->
+                <div id="visual-container" class="w-full bg-slate-900/60 rounded-xl border border-slate-750 p-4 min-h-[240px] flex justify-center items-center overflow-hidden shadow-inner transition-all duration-300">
+                    <!-- Bild oder Platzhalter SVG wird hier gerendert -->
+                </div>
+
+                <!-- Frage -->
+                <div class="space-y-2">
+                    <h3 id="question-text" class="text-lg md:text-xl font-semibold text-white leading-snug">
+                        Frage-Text wird geladen...
+                    </h3>
+                </div>
+
+                <!-- Antwortmöglichkeiten -->
+                <div id="options-container" class="space-y-3">
+                    <!-- Buttons werden dynamisch generiert -->
+                </div>
+
+                <!-- Erklärungsbox -->
+                <div id="explanation-box" class="hidden p-4 rounded-xl border transition-all duration-200">
+                    <div class="flex items-start space-x-3">
+                        <span id="explanation-icon" class="text-xl mt-0.5"></span>
+                        <div>
+                            <h4 id="explanation-title" class="font-semibold text-sm">Richtig!</h4>
+                            <p id="explanation-text" class="text-xs md:text-sm mt-1 text-slate-300 leading-relaxed"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Aktionen -->
+                <div class="flex justify-end pt-2">
+                    <button id="action-btn" onclick="checkAnswer()" disabled class="w-full sm:w-auto bg-blue-600 disabled:bg-slate-700 disabled:text-slate-400 disabled:cursor-not-allowed hover:bg-blue-500 text-white font-semibold px-6 py-3 rounded-xl transition duration-200">
+                        Antwort prüfen
+                    </button>
+                </div>
+            </div>
+
+            <!-- RESULT SCREEN -->
+            <div id="result-screen" class="hidden p-8 text-center space-y-6">
+                <div id="result-emoji-container" class="w-20 h-20 rounded-full flex items-center justify-center mx-auto border">
+                    <i id="result-icon" class="fas text-4xl"></i>
+                </div>
+                <div class="space-y-2">
+                    <h2 class="text-2xl font-bold text-white" id="result-title">Testergebnis</h2>
+                    <p class="text-slate-400 text-sm" id="result-subtitle">Du hast das Quiz erfolgreich beendet.</p>
+                </div>
+
+                <div class="bg-slate-900/60 rounded-2xl p-6 max-w-md mx-auto border border-slate-700/50 flex justify-around items-center" id="stats-panel">
+                    <div>
+                        <span class="block text-3xl font-extrabold text-white" id="final-score">0/10</span>
+                        <span class="text-xs text-slate-400" id="label-stat-score">Ergebnis</span>
+                    </div>
+                    <div class="h-12 w-px bg-slate-700" id="stat-divider-1"></div>
+                    <div>
+                        <span class="block text-3xl font-extrabold text-white" id="percentage">0%</span>
+                        <span class="text-xs text-slate-400" id="label-stat-ratio">Quote</span>
+                    </div>
+                    <div class="h-12 w-px bg-slate-700" id="stat-divider-2"></div>
+                    <div>
+                        <span class="block text-sm font-semibold px-2.5 py-1 rounded-full" id="performance-tag">Gut</span>
+                        <span class="text-xs text-slate-400 block mt-1" id="label-stat-tag">Bewertung</span>
+                    </div>
+                </div>
+
+                <p id="result-message" class="text-slate-300 text-sm max-w-md mx-auto leading-relaxed">
+                    Feedback-Text...
+                </p>
+
+                <div class="flex flex-col sm:flex-row gap-3 justify-center pt-4">
+                    <button onclick="restartQuiz()" class="bg-blue-600 hover:bg-blue-500 text-white font-semibold px-6 py-3 rounded-xl transition duration-200" id="btn-restart">
+                        <i class="fas fa-redo mr-2"></i> Erneut versuchen
+                    </button>
+                    <button onclick="showStartScreen()" class="bg-slate-700 hover:bg-slate-600 text-slate-200 font-semibold px-6 py-3 rounded-xl transition duration-200" id="btn-home">
+                        Zur Startseite
+                    </button>
+                </div>
+            </div>
+
         </div>
     </main>
 
-    <script>
-        window.questions = [];
-        window.currentIdx = 0;
-        window.score = 0;
+    <!-- LIGHTBOX / ZOOM MODAL -->
+    <div id="lightbox-modal" class="hidden fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4 cursor-zoom-out" onclick="closeLightbox()">
+        <button onclick="closeLightbox(event)" class="absolute top-6 right-6 text-white text-3xl hover:text-slate-300 transition focus:outline-none" aria-label="Schließen">
+            <i class="fas fa-times"></i>
+        </button>
+        <img id="lightbox-img" class="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl cursor-zoom-out" src="" alt="Vergrößerte Ansicht">
+    </div>
 
-        window.renderQuestion = function() {
-            const q = window.questions[window.currentIdx];
-            document.getElementById('q-text').innerText = q.question;
+    <!-- Footer -->
+    <footer class="bg-slate-800/40 border-t border-slate-800 py-4 text-center text-xs text-slate-500">
+        <div class="max-w-4xl mx-auto px-4">
+            <p id="footer-text">© 2026 IT-Umschulungs-Coach. Entwickelt für dynamisches und offline-fähiges Lernen via ZIP-Diskette am Desktop, von Alexander Rahn. <span class="block sm:inline font-mono font-bold text-blue-400 mt-1 sm:mt-0">v1.95 - Build: 18.07.2026 15:40</span></p>
+        </div>
+    </footer>
+
+  
+        // Systemvariablen
+        let questions = [...defaultQuestions];
+        let quizQuestions = []; // Shuffled Subset
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let selectedOptionIndex = null;
+        let isAnswerChecked = false;
+        let activeImportTab = 'json';
+        let currentTheme = 'modern';
+
+        // Countdown Timer
+        let isTimerEnabled = false;
+        let timerDuration = 30; // Sekunden
+        let timeLeft = 30;
+        let timerInterval = null;
+
+        // JSON-Templates
+        const jsonTemplate = `[
+  {
+    "question": "Was ist die Hauptaufgabe eines Routers?",
+    "options": [
+      "Verbinden von unterschiedlichen IP-Netzwerken",
+      "Erstellen von Backups im LAN",
+      "Terminieren eines Buskabels",
+      "Zuweisen von analogen Frequenzen"
+    ],
+    "correctAnswer": 0,
+    "explanation": "Ein Router arbeitet auf Layer 3 des OSI-Modells und leitet Pakete gezielt zwischen logisch getrennten Netzwerken weiter."
+  }
+]`;
+
+        const textTemplate = `Frage: Was ist ein großer Vorteil der Stern-Topologie?
+A) Günstigste Verkabelung von allen
+B) Leicht erweiterbar und störungsunempfindlich für andere Clients
+C) Benötigt absolut keine Kopplungselemente wie Switches
+D) Funktioniert ohne Stromzufuhr
+Antwort: B
+Erklärung: Da jedes Endgerät ein exklusives Kabel zum Switch besitzt, betrifft ein einzelner Kabelbruch nur dieses Gerät.`;
+
+        // Startkonfiguration
+        window.onload = function() {
+            updateLoadedCount();
+            loadTemplate();
+            setupDragAndDrop();
+        }
+
+        function updateLoadedCount() {
+            document.getElementById('loaded-questions-count').innerText = questions.length;
+            if (questions.length > 0) {
+                // LIVE VORSCHAU DER ERSTEN FRAGE ANZEIGEN
+                document.getElementById('preview-question-text').innerText = `"${questions[0].question.substring(0, 55)}..."`;
+            } else {
+                document.getElementById('preview-question-text').innerText = "- Keine Fragen geladen -";
+            }
+        }
+
+        // Theme-Umschalter
+        function setTheme(theme) {
+            currentTheme = theme;
+            const body = document.body;
+            const modernBtn = document.getElementById('theme-btn-modern');
+            const retroBtn = document.getElementById('theme-btn-retro');
+            const floppyDriveUI = document.getElementById('floppy-drive-ui');
+            const modernUploadUI = document.getElementById('modern-upload-ui');
+
+            if (theme === 'retro') {
+                body.classList.add('retro-mode');
+                retroBtn.className = "px-3 py-1 text-xs font-semibold rounded bg-gray-400 text-black border border-black";
+                modernBtn.className = "px-3 py-1 text-xs font-semibold rounded text-gray-700 hover:text-black";
+                floppyDriveUI.classList.remove('hidden');
+                modernUploadUI.classList.add('hidden');
+            } else {
+                body.classList.remove('retro-mode');
+                modernBtn.className = "px-3 py-1 text-xs font-semibold rounded bg-blue-600 text-white transition";
+                retroBtn.className = "px-3 py-1 text-xs font-semibold rounded text-slate-400 hover:text-slate-200 transition";
+                floppyDriveUI.classList.add('hidden');
+                modernUploadUI.classList.remove('hidden');
+            }
             
-            const progress = ((window.currentIdx + 1) / window.questions.length) * 100;
-            document.getElementById('progress-bar').style.width = `${progress}%`;
+            // Wenn Quiz läuft, Platzhalter neu rendern
+            if (!document.getElementById('quiz-screen').classList.contains('hidden')) {
+                const q = quizQuestions[currentQuestionIndex];
+                if (!q.image) {
+                    showPlaceholderFallback();
+                }
+            }
+        }
 
-            const box = document.getElementById('options-box');
-            box.innerHTML = '';
-            q.options.forEach((opt, i) => {
-                box.innerHTML += `<button onclick="window.check(${i})" class="p-4 bg-slate-700 hover:bg-slate-600 rounded-xl text-left border border-slate-600 transition">${opt}</button>`;
+        // Fisher-Yates-Zufallsmischer
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        // Drag & Drop Setup
+        function setupDragAndDrop() {
+            const dropZone = document.getElementById('drop-zone');
+            
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropZone.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    if (currentTheme === 'modern') {
+                        dropZone.classList.add('border-blue-500', 'bg-blue-500/10');
+                    } else {
+                        dropZone.style.backgroundColor = '#dfdfdf';
+                    }
+                }, false);
             });
-            document.getElementById('next-btn').classList.add('hidden');
-        };
 
-        window.check = function(i) {
-            const q = window.questions[window.currentIdx];
-            const feedback = document.getElementById('feedback-box');
-            feedback.classList.remove('hidden');
-            
-            if (i === q.correctAnswer) {
-                feedback.className = "p-4 rounded-xl border border-emerald-500/50 bg-emerald-900/20 text-emerald-300";
-                feedback.innerText = "Richtig! " + q.explanation;
-                window.score++;
-            } else {
-                feedback.className = "p-4 rounded-xl border border-rose-500/50 bg-rose-900/20 text-rose-300";
-                feedback.innerText = "Falsch! Richtig war: " + q.options[q.correctAnswer];
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    if (currentTheme === 'modern') {
+                        dropZone.classList.remove('border-blue-500', 'bg-blue-500/10');
+                    } else {
+                        dropZone.style.backgroundColor = '';
+                    }
+                }, false);
+            });
+
+            dropZone.addEventListener('drop', (e) => {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                if (files.length > 0) {
+                    handleFileRead(files[0]);
+                }
+            }, false);
+        }
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) {
+                handleFileRead(file);
             }
-            document.getElementById('next-btn').classList.remove('hidden');
-        };
+        }
 
-        document.getElementById('next-btn').onclick = () => {
-            window.currentIdx++;
-            if (window.currentIdx < window.questions.length) {
-                window.renderQuestion();
-                document.getElementById('feedback-box').classList.add('hidden');
-            } else {
-                alert("Quiz beendet! Score: " + window.score);
-                window.location.reload();
+        async function handleFileRead(file) {
+            const isZip = file.name.toLowerCase().endsWith('.zip');
+            const isJson = file.name.toLowerCase().endsWith('.json');
+
+            if (!isJson && !isZip) {
+                showFeedback("Fehler: Bitte wähle eine *.json oder *.zip Datei aus.", "error");
+                return;
             }
-        };
 
-        document.getElementById('file-input').addEventListener('change', async (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
+            // Floppy Animation im Retro Theme starten
+            if (currentTheme === 'retro') {
+                const floppy = document.getElementById('floppy-disk');
+                const led = document.getElementById('drive-led');
+                const label = document.getElementById('floppy-label-text');
+                
+                label.innerText = file.name.toUpperCase().substring(0, 11);
+                floppy.classList.add('floppy-inserted');
+                led.classList.add('led-active');
+            } else {
+                document.getElementById('upload-icon').className = "fas fa-spinner fa-spin text-3xl text-blue-500";
+                document.getElementById('upload-text').innerText = "Lese Lese-Kopf...";
+            }
+
             const reader = new FileReader();
-            reader.onload = async (event) => {
-                let data = event.target.result;
-                if (file.name.endsWith('.zip')) {
-                    const zip = await JSZip.loadAsync(data);
-                    for (const name in zip.files) {
-                        if (name.endsWith('.json')) {
-                            data = await zip.files[name].async("string");
-                            break;
+            if (isZip) {
+                reader.readAsArrayBuffer(file);
+            } else {
+                reader.readAsText(file);
+            }
+
+            reader.onload = function(e) {
+                // Simulierter Lesezugriff für Hardware-Feeling
+                setTimeout(async () => {
+                    try {
+                        let importedList = [];
+                        let jsonContentForTextarea = null;
+
+                        if (isZip) {
+                            if (typeof JSZip === 'undefined') {
+                                throw new Error("JSZip-Bibliothek ist noch nicht geladen.");
+                            }
+                            const zipData = e.target.result;
+                            const zip = await JSZip.loadAsync(zipData);
+                            let jsonContent = null;
+                            const imageMap = {};
+
+                            // ZIP durchgehen
+                            for (const [path, zipEntry] of Object.entries(zip.files)) {
+                                if (zipEntry.dir) continue;
+                                const cleanPath = path.replace(/^\.\//, "").toLowerCase();
+
+                                // Ignoriere macOS-Metadaten, systemclutter und unsichtbare Dateien
+                                if (cleanPath.includes('__macosx') || 
+                                    cleanPath.includes('.ds_store') || 
+                                    cleanPath.split('/').pop().startsWith('._') || 
+                                    cleanPath.split('/').pop().startsWith('.')) {
+                                    continue;
+                                }
+
+                                if (cleanPath.endsWith('.json')) {
+                                    const text = await zipEntry.async("string");
+                                    try {
+                                        const parsed = JSON.parse(text);
+                                        // Validieren, ob dies wirklich unsere Fragen-Datei ist, nicht package.json oder Metadaten!
+                                        if (Array.isArray(parsed) && parsed.length > 0 && parsed[0].question) {
+                                            jsonContent = parsed;
+                                            console.log(`[ZIP Loader] Gültige Quiz-JSON gefunden: "${path}"`);
+                                        }
+                                    } catch(err) {
+                                        console.log(`[ZIP Loader] Ignoriere ungültige JSON-Datei: "${path}"`);
+                                    }
+                                } else if (/\.(png|jpe?g|gif|svg)$/i.test(cleanPath)) {
+                                    const blob = await zipEntry.async("blob");
+                                    const objectURL = URL.createObjectURL(blob);
+                                    
+                                    // Registriere den vollen Pfad in kleinbuchstaben UND nur den Dateinamen
+                                    imageMap[cleanPath] = objectURL;
+                                    const fileNameOnly = cleanPath.split('/').pop();
+                                    imageMap[fileNameOnly] = objectURL;
+                                    
+                                    console.log(`[ZIP Loader] Geladenes Bild registriert: "${cleanPath}" und "${fileNameOnly}"`);
+                                }
+                            }
+
+                            if (!jsonContent) {
+                                throw new Error("Keine gültige Quiz-JSON-Datei (.json) im ZIP-Archiv gefunden!");
+                            }
+
+                            jsonContentForTextarea = jsonContent;
+
+                            // Fragen analysieren und Bilder intelligent per Fuzzy-Matching mappen
+                            jsonContent.forEach((item, index) => {
+                                if (!item.question || !Array.isArray(item.options) || item.options.length < 2 || item.correctAnswer === undefined) {
+                                    throw new Error(`Eintrag ${index + 1} im ZIP-JSON ist unvollständig.`);
+                                }
+                                const importedItem = {
+                                    question: item.question,
+                                    options: item.options,
+                                    correctAnswer: parseInt(item.correctAnswer),
+                                    explanation: item.explanation || "Keine Erklärung hinterlegt.",
+                                    image: null
+                                };
+
+                                if (item.image) {
+                                    const cleanImgPath = item.image.replace(/^\.\//, "").toLowerCase();
+                                    const fileNameOnly = cleanImgPath.split('/').pop();
+
+                                    if (imageMap[cleanImgPath]) {
+                                        importedItem.image = imageMap[cleanImgPath];
+                                    } else if (imageMap[fileNameOnly]) {
+                                        importedItem.image = imageMap[fileNameOnly];
+                                    } else {
+                                        // Fuzzy Match: Letzter Rettungsanker (endet mit fileNameOnly)
+                                        const fuzzyKey = Object.keys(imageMap).find(k => k.endsWith(fileNameOnly));
+                                        if (fuzzyKey) {
+                                            importedItem.image = imageMap[fuzzyKey];
+                                        } else {
+                                            importedItem.image = item.image; // Cloud Fallback
+                                        }
+                                    }
+                                }
+                                importedList.push(importedItem);
+                            });
+
+                            showFeedback(`Diskette entpackt! ${importedList.length} Fragen geladen.`, "success");
+
+                        } else {
+                            // JSON-Datei direkt laden
+                            const content = e.target.result;
+                            const parsed = JSON.parse(content);
+                            if (!Array.isArray(parsed)) {
+                                throw new Error("Das JSON-Format muss ein Array sein.");
+                            }
+
+                            jsonContentForTextarea = parsed;
+
+                            parsed.forEach((item, index) => {
+                                if (!item.question || !Array.isArray(item.options) || item.options.length < 2 || item.correctAnswer === undefined) {
+                                    throw new Error(`Eintrag ${index + 1} besitzt unvollständige Felder.`);
+                                }
+                                importedList.push({
+                                    question: item.question,
+                                    options: item.options,
+                                    correctAnswer: parseInt(item.correctAnswer),
+                                    explanation: item.explanation || "Keine Erklärung hinterlegt.",
+                                    image: item.image || null
+                                });
+                            });
+
+                            showFeedback(`JSON eingelesen! ${importedList.length} Fragen geladen.`, "success");
+                        }
+
+                        // Textfeld updaten und synchronisieren
+                        document.getElementById('import-textarea').value = JSON.stringify(jsonContentForTextarea, null, 2);
+                        switchImportTab('json', true);
+
+                        // Fragenliste global setzen
+                        questions = importedList;
+                        updateLoadedCount();
+                        
+                        // Benutzeroberfläche direkt updaten
+                        document.getElementById('active-source-indicator').innerText = `Diskette (${importedList.length} Fragen geladen)`;
+                        document.getElementById('active-source-indicator').className = "text-emerald-400 font-bold";
+                        document.getElementById('quiz-mode-badge').innerText = "Eigenes Set";
+                        
+                        if (currentTheme === 'modern') {
+                            document.getElementById('quiz-mode-badge').className = "bg-blue-600/20 text-blue-400 px-3 py-1.5 rounded-full font-medium uppercase tracking-wider border border-blue-500/20";
+                            document.getElementById('upload-icon').className = "fas fa-check-circle text-3xl text-emerald-500";
+                            document.getElementById('upload-text').innerText = "Diskette erfolgreich gelesen!";
+                        } else {
+                            document.getElementById('quiz-mode-badge').className = "bg-white text-black px-3 py-1.5 border border-black font-mono font-bold text-xs uppercase";
+                            const led = document.getElementById('drive-led');
+                            led.classList.remove('led-active');
+                            led.style.backgroundColor = '#22c55e';
+                        }
+
+                        // Schließe das Importfenster automatisch nach erfolgreichem Einlesen
+                        setTimeout(() => {
+                            toggleImportPanel(false);
+                        }, 1200);
+
+                    } catch (err) {
+                        console.error("[ZIP Loader] Fehler beim Entpacken:", err);
+                        showFeedback(`Fehler beim Lesen: ${err.message}`, "error");
+                        if (currentTheme === 'retro') {
+                            resetFloppyAnimation();
+                        } else {
+                            document.getElementById('upload-icon').className = "fas fa-exclamation-triangle text-3xl text-rose-500";
+                            document.getElementById('upload-text').innerText = "Ladefehler";
                         }
                     }
-                }
-                window.questions = JSON.parse(data);
-                document.getElementById('source-indicator').innerText = `Diskette aktiv! ${window.questions.length} Fragen geladen.`;
-                document.getElementById('source-indicator').className = "text-emerald-400 font-bold";
-                document.getElementById('quiz-container').classList.remove('hidden');
-                window.renderQuestion();
+                }, currentTheme === 'retro' ? 1450 : 300);
             };
-            file.name.endsWith('.zip') ? reader.readAsArrayBuffer(file) : reader.readAsText(file);
-        });
+        }
+
+        function resetFloppyAnimation() {
+            const floppy = document.getElementById('floppy-disk');
+            const led = document.getElementById('drive-led');
+            const label = document.getElementById('floppy-label-text');
+            
+            floppy.classList.remove('floppy-inserted');
+            led.classList.remove('led-active');
+            led.style.backgroundColor = '';
+            label.innerText = "DISKETTE.ZIP";
+            document.getElementById('file-input').value = "";
+        }
+
+        function exportQuestionsAsJson() {
+            const jsonString = JSON.stringify(questions, null, 2);
+            const blob = new Blob([jsonString], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = "netzwerktopologien_fragen.json";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function toggleImportPanel(show) {
+            const startScreen = document.getElementById('start-screen');
+            const importPanel = document.getElementById('import-panel');
+            
+            if (show) {
+                startScreen.classList.add('hidden');
+                importPanel.classList.remove('hidden');
+            } else {
+                importPanel.classList.add('hidden');
+                startScreen.classList.remove('hidden');
+                hideFeedback();
+                
+                if (currentTheme === 'modern') {
+                    document.getElementById('upload-icon').className = "fas fa-file-archive text-3xl text-slate-500";
+                    document.getElementById('upload-text').innerText = "ZIP-Diskette (.zip) oder JSON (.json) hierher ziehen";
+                    document.getElementById('file-input').value = "";
+                } else {
+                    resetFloppyAnimation();
+                }
+            }
+        }
+
+        function switchImportTab(tab, preserveContent = false) {
+            activeImportTab = tab;
+            const btnText = document.getElementById('tab-btn-text');
+            const btnJson = document.getElementById('tab-btn-json');
+            
+            if (tab === 'text') {
+                btnText.className = currentTheme === 'retro' 
+                    ? "flex-1 text-center py-2 text-xs font-semibold bg-gray-400 text-black border border-black"
+                    : "flex-1 text-center py-2 text-xs font-semibold rounded-lg bg-blue-600 text-white transition";
+                
+                btnJson.className = currentTheme === 'retro'
+                    ? "flex-1 text-center py-2 text-xs font-semibold text-gray-700"
+                    : "flex-1 text-center py-2 text-xs font-semibold rounded-lg text-slate-400 hover:text-slate-200 transition";
+                
+                if (!preserveContent) {
+                    document.getElementById('import-textarea').value = textTemplate;
+                }
+            } else {
+                btnJson.className = currentTheme === 'retro'
+                    ? "flex-1 text-center py-2 text-xs font-semibold bg-gray-400 text-black border border-black"
+                    : "flex-1 text-center py-2 text-xs font-semibold rounded-lg bg-blue-600 text-white transition";
+                
+                btnText.className = currentTheme === 'retro'
+                    ? "flex-1 text-center py-2 text-xs font-semibold text-gray-700"
+                    : "flex-1 text-center py-2 text-xs font-semibold rounded-lg text-slate-400 hover:text-slate-200 transition";
+                
+                if (!preserveContent) {
+                    document.getElementById('import-textarea').value = jsonTemplate;
+                }
+            }
+            hideFeedback();
+        }
+
+        function loadTemplate() {
+            if (activeImportTab === 'text') {
+                document.getElementById('import-textarea').value = textTemplate;
+            } else {
+                document.getElementById('import-textarea').value = jsonTemplate;
+            }
+            showFeedback("Vorlage geladen. Du kannst sie bearbeiten!", "info");
+        }
+
+        function clearImportText() {
+            document.getElementById('import-textarea').value = "";
+            showFeedback("Textfeld geleert.", "info");
+        }
+
+        function showFeedback(msg, type) {
+            const el = document.getElementById('import-feedback');
+            el.classList.remove('hidden', 'bg-emerald-500/10', 'text-emerald-400', 'border-emerald-500/30', 'bg-rose-500/10', 'text-rose-400', 'border-rose-500/30', 'bg-blue-500/10', 'text-blue-400', 'border-blue-500/30');
+            el.classList.add('border');
+
+            if (type === 'success') {
+                el.classList.add('bg-emerald-500/10', 'text-emerald-400', 'border-emerald-500/30');
+                el.innerHTML = `<i class="fas fa-check-circle mr-2"></i> <span>${msg}</span>`;
+            } else if (type === 'error') {
+                el.classList.add('bg-rose-500/10', 'text-rose-400', 'border-rose-500/30');
+                el.innerHTML = `<i class="fas fa-exclamation-circle mr-2"></i> <span>${msg}</span>`;
+            } else {
+                el.classList.add('bg-blue-500/10', 'text-blue-400', 'border-blue-500/30');
+                el.innerHTML = `<i class="fas fa-info-circle mr-2"></i> <span>${msg}</span>`;
+            }
+        }
+
+        function hideFeedback() {
+            document.getElementById('import-feedback').classList.add('hidden');
+        }
+
+        function processImport() {
+            const rawInput = document.getElementById('import-textarea').value.trim();
+            if (!rawInput) {
+                showFeedback("Bitte gib Text oder JSON ein.", "error");
+                return;
+            }
+
+            let importedList = [];
+            if (activeImportTab === 'text') {
+                try {
+                    const questionBlocks = rawInput.split(/---+\s*/);
+                    questionBlocks.forEach((block, blockIdx) => {
+                        const cleanBlock = block.trim();
+                        if (!cleanBlock) return;
+
+                        const lines = cleanBlock.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+                        let question = "";
+                        let options = [];
+                        let correctAnswer = null;
+                        let explanation = "";
+
+                        lines.forEach(line => {
+                            if (line.match(/^(Frage|Q):/i)) {
+                                question = line.replace(/^(Frage|Q):\s*/i, "");
+                            } else if (line.match(/^[A-D]\)/i)) {
+                                options.push(line.replace(/^[A-D]\)/i, ""));
+                            } else if (line.match(/^(Antwort|Richtig):/i)) {
+                                const ansLetter = line.replace(/^(Antwort|Richtig):\s*/i, "").trim().toUpperCase();
+                                if (ansLetter === 'A') correctAnswer = 0;
+                                else if (ansLetter === 'B') correctAnswer = 1;
+                                else if (ansLetter === 'C') correctAnswer = 2;
+                                else if (ansLetter === 'D') correctAnswer = 3;
+                            } else if (line.match(/^(Erklärung|Explanation):/i)) {
+                                explanation = line.replace(/^(Erklärung|Explanation):\s*/i, "");
+                            }
+                        });
+
+                        if (question && options.length >= 2 && correctAnswer !== null) {
+                            importedList.push({
+                                question,
+                                options,
+                                correctAnswer,
+                                explanation: explanation || "Keine Erklärung."
+                            });
+                        } else {
+                            throw new Error(`Fehler bei Frage ${blockIdx + 1}`);
+                        }
+                    });
+                } catch (e) {
+                    showFeedback(e.message, "error");
+                    return;
+                }
+            } else {
+                try {
+                    const parsed = JSON.parse(rawInput);
+                    if (!Array.isArray(parsed)) throw new Error("JSON muss ein Array sein.");
+                    parsed.forEach((item, index) => {
+                        if (!item.question || !Array.isArray(item.options) || item.options.length < 2 || item.correctAnswer === undefined) {
+                            throw new Error(`Eintrag ${index + 1} im JSON ist unvollständig.`);
+                        }
+                        importedList.push({
+                            question: item.question,
+                            options: item.options,
+                            correctAnswer: parseInt(item.correctAnswer),
+                            explanation: item.explanation || "Keine Erklärung.",
+                            image: item.image || null
+                        });
+                    });
+                } catch (e) {
+                    showFeedback(`JSON-Fehler: ${e.message}`, "error");
+                    return;
+                }
+            }
+
+            questions = importedList;
+            updateLoadedCount();
+            
+            document.getElementById('active-source-indicator').innerText = `Manuelle Eingabe (${questions.length} Fragen geladen)`;
+            document.getElementById('active-source-indicator').className = "text-amber-400 font-bold";
+            document.getElementById('quiz-mode-badge').innerText = "Eigenes Set";
+            
+            showFeedback(`${questions.length} Fragen erfolgreich manuell geladen!`, "success");
+            setTimeout(() => { toggleImportPanel(false); }, 1200);
+        }
+
+        function startQuiz() {
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('result-screen').classList.add('hidden');
+            document.getElementById('quiz-screen').classList.remove('hidden');
+            
+            isTimerEnabled = document.getElementById('timer-toggle').checked;
+            const timerContainer = document.getElementById('timer-container');
+            if (isTimerEnabled) {
+                timerContainer.classList.remove('hidden');
+            } else {
+                timerContainer.classList.add('hidden');
+            }
+
+            const countSelect = document.getElementById('question-count-select');
+            let selectedCount = countSelect.value === 'all' ? questions.length : parseInt(countSelect.value);
+
+            quizQuestions = [...questions];
+            shuffleArray(quizQuestions);
+            
+            if (selectedCount > quizQuestions.length) {
+                selectedCount = quizQuestions.length;
+            }
+            quizQuestions = quizQuestions.slice(0, selectedCount);
+
+            currentQuestionIndex = 0;
+            score = 0;
+            loadQuestion();
+        }
+
+        function startTimer() {
+            clearInterval(timerInterval);
+            timeLeft = timerDuration;
+            
+            const badge = document.getElementById('timer-badge');
+            const bar = document.getElementById('timer-bar');
+            
+            badge.innerText = `${timeLeft}s`;
+            badge.className = "font-mono font-bold bg-slate-900/50 px-2 py-0.5 rounded text-amber-400";
+            bar.style.width = "100%";
+            bar.className = "bg-amber-500 h-full linear-timer";
+
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                badge.innerText = `${timeLeft}s`;
+                const percent = (timeLeft / timerDuration) * 100;
+                bar.style.width = `${percent}%`;
+
+                if (timeLeft <= 10) {
+                    if (currentTheme === 'modern') {
+                        badge.className = "font-mono font-bold bg-rose-950 px-2 py-0.5 rounded text-rose-400 animate-pulse";
+                        bar.className = "bg-rose-500 h-full linear-timer";
+                    } else {
+                        badge.className = "font-mono font-bold bg-black px-2 py-0.5 text-red-500";
+                        bar.className = "bg-red-600 h-full linear-timer";
+                    }
+                }
+
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    checkAnswer(true); // Timeout!
+                }
+            }, 1000);
+        }
+
+        function stopTimer() {
+            clearInterval(timerInterval);
+        }
+
+        function openLightbox(src) {
+            const modal = document.getElementById('lightbox-modal');
+            const img = document.getElementById('lightbox-img');
+            img.src = src;
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeLightbox(event) {
+            if (event) event.stopPropagation();
+            const modal = document.getElementById('lightbox-modal');
+            modal.classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+
+        function showPlaceholderFallback() {
+            const container = document.getElementById('visual-container');
+            
+            if (currentTheme === 'modern') {
+                container.innerHTML = `
+                    <svg viewBox="0 0 400 180" class="w-full h-56 text-slate-500 select-none">
+                        <style>
+                            .grid-line { stroke: rgba(59, 130, 246, 0.08); stroke-width: 1; }
+                            .node { fill: #0f172a; stroke: #3b82f6; stroke-width: 2; }
+                            .conn { stroke: #334155; stroke-width: 1.5; stroke-dasharray: 4 4; }
+                            .pulse-circle { animation: pulse 2.5s infinite ease-out; transform-origin: center; }
+                            @keyframes pulse {
+                                0% { r: 5; opacity: 1; stroke: #60a5fa; }
+                                100% { r: 25; opacity: 0; stroke: #3b82f6; }
+                            }
+                        </style>
+                        <line x1="50" y1="0" x2="50" y2="180" class="grid-line" />
+                        <line x1="150" y1="0" x2="150" y2="180" class="grid-line" />
+                        <line x1="250" y1="0" x2="250" y2="180" class="grid-line" />
+                        <line x1="0" y1="90" x2="400" y2="90" class="grid-line" />
+                        <line x1="100" y1="90" x2="200" y2="45" class="conn" />
+                        <line x1="100" y1="90" x2="200" y2="135" class="conn" />
+                        <line x1="200" y1="45" x2="300" y2="90" class="conn" />
+                        <line x1="200" y1="135" x2="300" y2="90" class="conn" />
+                        <circle cx="200" cy="90" r="5" fill="none" class="pulse-circle" />
+                        <circle cx="200" cy="90" r="4" fill="#3b82f6" />
+                        <circle cx="100" cy="90" r="10" class="node" />
+                        <circle cx="200" cy="45" r="10" class="node" />
+                        <circle cx="200" cy="135" r="10" class="node" />
+                        <circle cx="300" cy="90" r="10" class="node" />
+                        <rect x="120" y="77" width="160" height="26" rx="6" fill="#0f172a" stroke="#334155" stroke-width="1.5" />
+                        <text x="200" y="94" fill="#94a3b8" font-size="11" font-family="monospace" text-anchor="middle" font-weight="600">Topologie-Szenario</text>
+                    </svg>
+                `;
+            } else {
+                container.innerHTML = `
+                    <svg viewBox="0 0 400 180" class="w-full h-56 select-none font-mono text-emerald-500 fill-none stroke-emerald-500">
+                        <style>
+                            @keyframes flicker { 0% { opacity: 0.95; } 100% { opacity: 1; } }
+                            .retro-terminal { animation: flicker 0.15s infinite; }
+                            .retro-green-node { fill: #000000; stroke: #10b981; stroke-width: 2; }
+                            .retro-green-line { stroke: #10b981; stroke-width: 1.5; stroke-dasharray: 6 3; }
+                        </style>
+                        <g class="retro-terminal">
+                            <path d="M 0,30 L 400,30 M 0,90 L 400,90 M 0,150 L 400,150" stroke="#042f2e" stroke-width="0.5" />
+                            <path d="M 100,0 L 100,180 M 200,0 L 200,180 M 300,0 L 300,180" stroke="#042f2e" stroke-width="0.5" />
+                            <line x1="120" y1="90" x2="200" y2="45" class="retro-green-line" />
+                            <line x1="120" y1="90" x2="200" y2="135" class="retro-green-line" />
+                            <line x1="200" y1="45" x2="280" y2="90" class="retro-green-line" />
+                            <line x1="200" y1="135" x2="280" y2="90" class="retro-green-line" />
+                            <circle cx="120" cy="90" r="12" class="retro-green-node" />
+                            <circle cx="200" cy="45" r="12" class="retro-green-node" />
+                            <circle cx="200" cy="135" r="12" class="retro-green-node" />
+                            <circle cx="280" cy="90" r="12" class="retro-green-node" />
+                            <rect x="5" y="5" width="105" height="18" fill="#000000" stroke="#10b981" />
+                            <text x="10" y="17" font-size="9" fill="#10b981" stroke="none">SYS.STATUS: OK</text>
+                            <text x="390" y="20" font-size="9" fill="#10b981" stroke="none" text-anchor="end">DRV_A:\\NET_DIAG.EXE</text>
+                            <text x="200" y="94" font-size="10" fill="#10b981" stroke="none" text-anchor="middle" font-weight="bold">TOPOLOGIE v1.95</text>
+                        </g>
+                    </svg>
+                `;
+            }
+        }
+
+        function loadQuestion() {
+            isAnswerChecked = false;
+            selectedOptionIndex = null;
+            
+            const q = quizQuestions[currentQuestionIndex];
+            
+            document.getElementById('current-question-num').innerText = currentQuestionIndex + 1;
+            document.getElementById('total-questions-num').innerText = quizQuestions.length;
+            document.getElementById('current-score').innerText = score;
+            
+            const progressPercent = ((currentQuestionIndex + 1) / quizQuestions.length) * 100;
+            document.getElementById('progress-bar').style.width = `${progressPercent}%`;
+            document.getElementById('question-text').innerText = q.question;
+
+            // Grafik handling
+            const visualContainer = document.getElementById('visual-container');
+            if (q.image) {
+                visualContainer.innerHTML = `
+                    <img src="${q.image}" class="max-h-[240px] max-w-full object-contain rounded-lg border border-slate-700/50 p-1 bg-white shadow-inner cursor-zoom-in hover:opacity-95 transition" alt="Topologie-Diagramm" onerror="showPlaceholderFallback()" onclick="openLightbox('${q.image}')">
+                `;
+            } else {
+                showPlaceholderFallback();
+            }
+
+            const container = document.getElementById('options-container');
+            container.innerHTML = '';
+
+            q.options.forEach((option, idx) => {
+                const btn = document.createElement('button');
+                if (currentTheme === 'modern') {
+                    btn.className = "w-full text-left p-4 rounded-xl border border-slate-700 bg-slate-800/50 hover:bg-slate-700/50 hover:border-slate-500 transition duration-150 flex items-center justify-between group focus:outline-none focus:ring-2 focus:ring-blue-500/50";
+                    btn.innerHTML = `
+                        <span class="text-sm md:text-base text-slate-200 group-hover:text-white font-medium">${option}</span>
+                        <span class="w-5 h-5 rounded-full border border-slate-600 flex items-center justify-center text-xs text-transparent group-hover:border-slate-400 transition"><i class="fas fa-check"></i></span>
+                    `;
+                } else {
+                    btn.className = "w-full text-left p-3 border-2 border-black bg-gray-200 hover:bg-gray-300 flex items-center justify-between font-mono text-sm font-bold text-black focus:outline-none";
+                    btn.innerHTML = `
+                        <span>${String.fromCharCode(65 + idx)}) ${option}</span>
+                        <span class="w-4 h-4 border border-black bg-white flex items-center justify-center text-xs text-transparent font-bold">X</span>
+                    `;
+                }
+                btn.onclick = () => selectOption(idx);
+                container.appendChild(btn);
+            });
+
+            document.getElementById('explanation-box').classList.add('hidden');
+            const actionBtn = document.getElementById('action-btn');
+            actionBtn.innerText = "Antwort prüfen";
+            actionBtn.disabled = true;
+            actionBtn.onclick = () => checkAnswer(false);
+            
+            if (currentTheme === 'modern') {
+                actionBtn.className = "w-full sm:w-auto bg-blue-600 disabled:bg-slate-700 disabled:text-slate-400 disabled:cursor-not-allowed hover:bg-blue-500 text-white font-semibold px-6 py-3 rounded-xl transition duration-200";
+            } else {
+                actionBtn.className = "w-full sm:w-auto px-6 py-2 bg-gray-300 font-mono font-bold text-black border-2 border-black disabled:text-gray-500 disabled:border-gray-400";
+            }
+
+            if (isTimerEnabled) {
+                startTimer();
+            }
+        }
+
+        function selectOption(index) {
+            if (isAnswerChecked) return;
+            selectedOptionIndex = index;
+            const container = document.getElementById('options-container');
+            const buttons = container.querySelectorAll('button');
+
+            buttons.forEach((btn, idx) => {
+                const circle = btn.querySelector('span:last-child');
+                if (idx === index) {
+                    if (currentTheme === 'modern') {
+                        btn.className = "w-full text-left p-4 rounded-xl border-2 border-blue-500 bg-blue-500/10 transition duration-150 flex items-center justify-between focus:outline-none";
+                        circle.className = "w-5 h-5 rounded-full bg-blue-500 text-white flex items-center justify-center text-xs border border-blue-500";
+                    } else {
+                        btn.className = "w-full text-left p-3 border-2 border-black bg-white flex items-center justify-between font-mono text-sm font-bold text-black focus:outline-none";
+                        circle.className = "w-4 h-4 border border-black bg-black text-white flex items-center justify-center text-xs";
+                    }
+                } else {
+                    if (currentTheme === 'modern') {
+                        btn.className = "w-full text-left p-4 rounded-xl border border-slate-700 bg-slate-800/50 hover:bg-slate-700/50 transition duration-150 flex items-center justify-between focus:outline-none";
+                        circle.className = "w-5 h-5 rounded-full border border-slate-600 flex items-center justify-center text-xs text-transparent";
+                    } else {
+                        btn.className = "w-full text-left p-3 border-2 border-black bg-gray-200 hover:bg-gray-300 flex items-center justify-between font-mono text-sm font-bold text-black focus:outline-none";
+                        circle.className = "w-4 h-4 border border-black bg-white flex items-center justify-center text-xs text-transparent";
+                    }
+                }
+            });
+            document.getElementById('action-btn').disabled = false;
+        }
+
+        function checkAnswer(isTimeout = false) {
+            if (isAnswerChecked) return;
+            isAnswerChecked = true;
+            stopTimer();
+
+            const q = quizQuestions[currentQuestionIndex];
+            const container = document.getElementById('options-container');
+            const buttons = container.querySelectorAll('button');
+            const explanationBox = document.getElementById('explanation-box');
+            const explanationTitle = document.getElementById('explanation-title');
+            const explanationText = document.getElementById('explanation-text');
+            const explanationIcon = document.getElementById('explanation-icon');
+
+            const isCorrect = (selectedOptionIndex === q.correctAnswer);
+            if (isCorrect && !isTimeout) {
+                score++;
+                document.getElementById('current-score').innerText = score;
+            }
+
+            buttons.forEach((btn, idx) => {
+                const circle = btn.querySelector('span:last-child');
+                btn.disabled = true;
+                btn.onclick = null;
+
+                if (idx === q.correctAnswer) {
+                    if (currentTheme === 'modern') {
+                        btn.className = "w-full text-left p-4 rounded-xl border-2 border-emerald-500 bg-emerald-500/10 transition duration-150 flex items-center justify-between text-emerald-400 font-semibold";
+                        circle.className = "w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center text-xs border border-emerald-500";
+                        circle.innerHTML = `<i class="fas fa-check"></i>`;
+                    } else {
+                        btn.className = "w-full text-left p-3 border-2 border-emerald-600 bg-emerald-100 flex items-center justify-between font-mono text-sm font-bold text-emerald-800";
+                        circle.className = "w-4 h-4 border border-emerald-600 bg-emerald-600 text-white flex items-center justify-center text-xs";
+                        circle.innerText = "✓";
+                    }
+                } else if (idx === selectedOptionIndex && !isCorrect) {
+                    if (currentTheme === 'modern') {
+                        btn.className = "w-full text-left p-4 rounded-xl border-2 border-rose-500 bg-rose-500/10 transition duration-150 flex items-center justify-between text-rose-400 font-semibold";
+                        circle.className = "w-5 h-5 rounded-full bg-rose-500 text-white flex items-center justify-center text-xs border border-rose-500";
+                        circle.innerHTML = `<i class="fas fa-times"></i>`;
+                    } else {
+                        btn.className = "w-full text-left p-3 border-2 border-red-600 bg-red-100 flex items-center justify-between font-mono text-sm font-bold text-red-800";
+                        circle.className = "w-4 h-4 border border-red-600 bg-red-600 text-white flex items-center justify-center text-xs";
+                        circle.innerText = "X";
+                    }
+                } else {
+                    if (currentTheme === 'modern') {
+                        btn.className = "w-full text-left p-4 rounded-xl border border-slate-800 bg-slate-900/30 opacity-40 transition duration-150 flex items-center justify-between text-slate-500";
+                        circle.className = "hidden";
+                    } else {
+                        btn.className = "w-full text-left p-3 border border-gray-400 bg-gray-100 opacity-40 flex items-center justify-between font-mono text-sm text-gray-500";
+                        circle.className = "hidden";
+                    }
+                }
+            });
+
+            explanationText.innerText = q.explanation;
+            explanationBox.classList.remove('hidden');
+
+            if (isTimeout) {
+                if (currentTheme === 'modern') {
+                    explanationBox.className = "p-4 rounded-xl border border-amber-500/30 bg-amber-500/5 text-amber-300";
+                    explanationTitle.innerText = "Zeit abgelaufen!";
+                    explanationIcon.innerHTML = `<i class="fas fa-hourglass-end text-amber-500 text-xl"></i>`;
+                } else {
+                    explanationBox.className = "p-4 border-2 border-black bg-yellow-100 text-black";
+                    explanationTitle.innerText = "ZEIT ABGELAUFEN!";
+                    explanationIcon.innerHTML = `[!]`;
+                }
+            } else if (isCorrect) {
+                if (currentTheme === 'modern') {
+                    explanationBox.className = "p-4 rounded-xl border border-emerald-500/30 bg-emerald-500/5 text-emerald-300";
+                    explanationTitle.innerText = "Korrekt!";
+                    explanationIcon.innerHTML = `<i class="fas fa-check-circle text-emerald-500 text-xl"></i>`;
+                } else {
+                    explanationBox.className = "p-4 border-2 border-emerald-600 bg-emerald-100 text-black";
+                    explanationTitle.innerText = "KORREKT!";
+                    explanationIcon.innerHTML = `[*]`;
+                }
+            } else {
+                if (currentTheme === 'modern') {
+                    explanationBox.className = "p-4 rounded-xl border border-rose-500/30 bg-rose-500/5 text-rose-300";
+                    explanationTitle.innerText = "Leider falsch!";
+                    explanationIcon.innerHTML = `<i class="fas fa-exclamation-circle text-rose-500 text-xl"></i>`;
+                } else {
+                    explanationBox.className = "p-4 border-2 border-red-600 bg-red-100 text-black";
+                    explanationTitle.innerText = "FALSCH!";
+                    explanationIcon.innerHTML = `[X]`;
+                }
+            }
+
+            const actionBtn = document.getElementById('action-btn');
+            actionBtn.disabled = false;
+            if (currentQuestionIndex < quizQuestions.length - 1) {
+                actionBtn.innerText = "Nächste Frage";
+                actionBtn.onclick = nextQuestion;
+            } else {
+                actionBtn.innerText = "Auswertung anzeigen";
+                actionBtn.onclick = showResults;
+            }
+            
+            if (currentTheme === 'modern') {
+                actionBtn.className = "w-full sm:w-auto bg-slate-100 hover:bg-white text-slate-900 font-semibold px-6 py-3 rounded-xl transition duration-200";
+            } else {
+                actionBtn.className = "w-full sm:w-auto px-6 py-2 bg-gray-300 font-mono font-bold text-black border-2 border-black";
+            }
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            loadQuestion();
+        }
+
+        function showResults() {
+            document.getElementById('quiz-screen').classList.add('hidden');
+            document.getElementById('result-screen').classList.remove('hidden');
+
+            const finalScore = document.getElementById('final-score');
+            const percentage = document.getElementById('percentage');
+            const performanceTag = document.getElementById('performance-tag');
+            const resultMessage = document.getElementById('result-message');
+            const resultEmojiContainer = document.getElementById('result-emoji-container');
+            const resultIcon = document.getElementById('result-icon');
+
+            finalScore.innerText = `${score}/${quizQuestions.length}`;
+            const percentValue = Math.round((score / quizQuestions.length) * 100);
+            percentage.innerText = `${percentValue}%`;
+
+            if (percentValue >= 90) {
+                performanceTag.innerText = "Hervorragend!";
+                if (currentTheme === 'modern') {
+                    performanceTag.className = "block text-sm font-semibold px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400";
+                    resultEmojiContainer.className = "w-20 h-20 bg-emerald-500/10 text-emerald-500 rounded-full flex items-center justify-center mx-auto border border-emerald-500/30";
+                } else {
+                    performanceTag.className = "block font-mono text-xs font-bold border border-emerald-600 bg-emerald-100 text-emerald-800 px-3 py-1";
+                    resultEmojiContainer.className = "w-16 h-16 bg-white border-2 border-black flex items-center justify-center mx-auto text-emerald-600";
+                }
+                resultMessage.innerText = "Nostalgisches Glanzresultat! Du hast die Netzwerktopologien absolut verstanden.";
+                resultIcon.className = "fas fa-trophy text-4xl";
+            } else if (percentValue >= 70) {
+                performanceTag.innerText = "Bestanden";
+                if (currentTheme === 'modern') {
+                    performanceTag.className = "block text-sm font-semibold px-3 py-1 rounded-full bg-blue-500/20 text-blue-400";
+                    resultEmojiContainer.className = "w-20 h-20 bg-blue-500/10 text-blue-500 rounded-full flex items-center justify-center mx-auto border border-blue-500/30";
+                } else {
+                    performanceTag.className = "block font-mono text-xs font-bold border border-blue-600 bg-blue-100 text-blue-800 px-3 py-1";
+                    resultEmojiContainer.className = "w-16 h-16 bg-white border-2 border-black flex items-center justify-center mx-auto text-emerald-600";
+                }
+                resultMessage.innerText = "Gute Arbeit! Die grundlegenden Netzwerk-Schaltpläne sitzen solide.";
+                resultIcon.className = "fas fa-thumbs-up text-4xl";
+            } else {
+                performanceTag.innerText = "Wiederholen";
+                if (currentTheme === 'modern') {
+                    performanceTag.className = "block text-sm font-semibold px-3 py-1 rounded-full bg-amber-500/20 text-amber-400";
+                    resultEmojiContainer.className = "w-20 h-20 bg-amber-500/10 text-amber-500 rounded-full flex items-center justify-center mx-auto border border-amber-500/30";
+                } else {
+                    performanceTag.className = "block font-mono text-xs font-bold border border-red-600 bg-red-100 text-red-800 px-3 py-1";
+                    resultEmojiContainer.className = "w-16 h-16 bg-white border-2 border-black flex items-center justify-center mx-auto text-red-600";
+                }
+                resultMessage.innerText = "Noch nicht ganz prüfungsbereit. Schieb die Diskette einfach nochmal rein und starte einen neuen Versuch!";
+                resultIcon.className = "fas fa-sync-alt text-4xl";
+            }
+        }
+
+        function restartQuiz() {
+            startQuiz();
+        }
+
+        function showStartScreen() {
+            stopTimer();
+            document.getElementById('quiz-screen').classList.add('hidden');
+            document.getElementById('result-screen').classList.add('hidden');
+            document.getElementById('start-screen').classList.remove('hidden');
+        }
     </script>
 </body>
 </html>

@@ -1196,31 +1196,40 @@ Erklärung: Da jedes Endgerät ein exklusives Kabel zum Switch besitzt, betrifft
         }
 
         function startQuiz() {
-            document.getElementById('start-screen').classList.add('hidden');
-            document.getElementById('result-screen').classList.add('hidden');
-            document.getElementById('quiz-screen').classList.remove('hidden');
-            
-            isTimerEnabled = document.getElementById('timer-toggle').checked;
-            const timerContainer = document.getElementById('timer-container');
-            if (isTimerEnabled) {
-                timerContainer.classList.remove('hidden');
-            } else {
-                timerContainer.classList.add('hidden');
-            }
+          
+    // 1. Screens umschalten
+    document.getElementById('start-screen').classList.add('hidden');
+    document.getElementById('result-screen').classList.add('hidden');
+    document.getElementById('quiz-screen').classList.remove('hidden');
+    
+    // 2. Timer-Status prüfen und UI aktualisieren
+    isTimerEnabled = document.getElementById('timer-toggle').checked;
+    const timerContainer = document.getElementById('timer-container');
+    
+    // Timer vorher stoppen, falls noch einer lief (Sicherheit)
+    stopTimer(); 
+    
+    if (isTimerEnabled) {
+        timerContainer.classList.remove('hidden');
+    } else {
+        timerContainer.classList.add('hidden');
+    }
 
-            const countSelect = document.getElementById('question-count-select');
-            let selectedCount = countSelect.value === 'all' ? questions.length : parseInt(countSelect.value);
+    // 3. Fragen-Auswahl Logik
+    const countSelect = document.getElementById('question-count-select');
+    let selectedCount = countSelect.value === 'all' ? questions.length : parseInt(countSelect.value);
 
-            quizQuestions = [...questions];
-            shuffleArray(quizQuestions);
-            
-            if (selectedCount > quizQuestions.length) {
-                selectedCount = quizQuestions.length;
-            }
-            quizQuestions = quizQuestions.slice(0, selectedCount);
+    quizQuestions = [...questions];
+    shuffleArray(quizQuestions);
+    
+    if (selectedCount > quizQuestions.length) {
+        selectedCount = quizQuestions.length;
+    }
+    quizQuestions = quizQuestions.slice(0, selectedCount);
 
-            currentQuestionIndex = 0;
-            score = 0;
+    // 4. Initialisierung für das Quiz
+    currentQuestionIndex = 0;
+    score = 0;
             loadQuestion();
         }
 

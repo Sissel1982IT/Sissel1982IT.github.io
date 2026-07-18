@@ -1345,6 +1345,45 @@ Erklärung: Da jedes Endgerät ein exklusives Kabel zum Switch besitzt, betrifft
         function loadQuestion() {
             isAnswerChecked = false;
             selectedOptionIndex = null;
+
+            function startTimer() {
+    // Vorherigen Timer sicher stoppen
+    stopTimer();
+    
+    timeLeft = timerDuration;
+    const badge = document.getElementById('timer-badge');
+    const bar = document.getElementById('timer-bar');
+    
+    badge.innerText = `${timeLeft}s`;
+    badge.className = "font-mono font-bold bg-slate-900/50 px-2 py-0.5 rounded text-amber-400";
+    bar.style.width = "100%";
+    bar.className = "bg-amber-500 h-full linear-timer";
+
+    timerInterval = setInterval(() => {
+        timeLeft--;
+        badge.innerText = `${timeLeft}s`;
+        
+        const percent = (timeLeft / timerDuration) * 100;
+        bar.style.width = `${percent}%`;
+
+        if (timeLeft <= 10) {
+            badge.className = "font-mono font-bold bg-rose-950 px-2 py-0.5 rounded text-rose-400 animate-pulse";
+            bar.className = "bg-rose-500 h-full linear-timer";
+        }
+
+        if (timeLeft <= 0) {
+            stopTimer(); // Timer stoppen
+            checkAnswer(true); // Automatische Auswertung mit Timeout-Status
+        }
+    }, 1000);
+}
+
+function stopTimer() {
+    if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+    }
+}
             
             const q = quizQuestions[currentQuestionIndex];
             

@@ -169,7 +169,7 @@
                 <div class="w-20 h-20 bg-blue-500/10 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-4 border border-blue-500/30" id="start-logo">
                     <i class="fas fa-graduation-cap text-4xl"></i>
                 </div>
-                <h2 class="text-2xl font-bold text-white" id="start-title">Bist du bereit für den Topologie-Check?</h2>
+                <h2 class="text-2xl font-bold text-white" id="start-title">Bist du bereit für den Fragen-Check?</h2>
                 <p class="text-slate-300 text-sm md:text-base leading-relaxed max-w-md mx-auto" id="start-desc">
                     Lade deine eigenen Lernsätze direkt im Browser, ohne Internetverbindung – genau wie eine Diskette!
                 </p>
@@ -1013,7 +1013,7 @@ Erklärung: Da jedes Endgerät ein exklusives Kabel zum Switch besitzt, betrifft
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = "netzwerktopologien_fragen.json";
+            a.download = "fragen.json";
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
@@ -1309,7 +1309,7 @@ Erklärung: Da jedes Endgerät ein exklusives Kabel zum Switch besitzt, betrifft
                         <circle cx="200" cy="135" r="10" class="node" />
                         <circle cx="300" cy="90" r="10" class="node" />
                         <rect x="120" y="77" width="160" height="26" rx="6" fill="#0f172a" stroke="#334155" stroke-width="1.5" />
-                        <text x="200" y="94" fill="#94a3b8" font-size="11" font-family="monospace" text-anchor="middle" font-weight="600">Topologie-Szenario</text>
+                        <text x="200" y="94" fill="#94a3b8" font-size="11" font-family="monospace" text-anchor="middle" font-weight="600">Quiz-Szenario</text>
                     </svg>
                 `;
             } else {
@@ -1335,7 +1335,7 @@ Erklärung: Da jedes Endgerät ein exklusives Kabel zum Switch besitzt, betrifft
                             <rect x="5" y="5" width="105" height="18" fill="#000000" stroke="#10b981" />
                             <text x="10" y="17" font-size="9" fill="#10b981" stroke="none">SYS.STATUS: OK</text>
                             <text x="390" y="20" font-size="9" fill="#10b981" stroke="none" text-anchor="end">DRV_A:\\NET_DIAG.EXE</text>
-                            <text x="200" y="94" font-size="10" fill="#10b981" stroke="none" text-anchor="middle" font-weight="bold">TOPOLOGIE v1.95</text>
+                            <text x="200" y="94" font-size="10" fill="#10b981" stroke="none" text-anchor="middle" font-weight="bold">Quiz v1.95</text>
                         </g>
                     </svg>
                 `;
@@ -1570,7 +1570,7 @@ Erklärung: Da jedes Endgerät ein exklusives Kabel zum Switch besitzt, betrifft
                     performanceTag.className = "block font-mono text-xs font-bold border border-emerald-600 bg-emerald-100 text-emerald-800 px-3 py-1";
                     resultEmojiContainer.className = "w-16 h-16 bg-white border-2 border-black flex items-center justify-center mx-auto text-emerald-600";
                 }
-                resultMessage.innerText = "Nostalgisches Glanzresultat! Du hast die Netzwerktopologien absolut verstanden.";
+                resultMessage.innerText = "Glanzresultat! Du hast es absolut verstanden.";
                 resultIcon.className = "fas fa-trophy text-4xl";
             } else if (percentValue >= 70) {
                 performanceTag.innerText = "Bestanden";

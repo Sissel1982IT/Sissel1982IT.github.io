@@ -613,12 +613,18 @@ D) Funktioniert ohne Stromzufuhr
 Antwort: B
 Erklärung: Da jedes Endgerät ein exklusives Kabel zum Switch besitzt, betrifft ein einzelner Kabelbruch nur dieses Gerät.`;
 
-        window.onload = function() {
-            updateLoadedCount();
-            loadTemplate();
-            setupDragAndDrop();
-        }
+   window.onload = function() {
+    updateLoadedCount();
+    loadTemplate();
+    setupDragAndDrop();
 
+    // Der Listener gehört IN die Klammer von window.onload:
+    document.getElementById('file-input').addEventListener('change', function(e) {
+        if (e.target.files.length > 0) {
+            handleFileRead(e.target.files[0]);
+        }
+    });
+} 
         function updateLoadedCount() {
             document.getElementById('loaded-questions-count').innerText = questions.length;
             document.getElementById('preview-question-text').innerText = questions.length > 0 

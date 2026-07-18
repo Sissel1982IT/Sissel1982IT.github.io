@@ -4,10 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Interaktives Quiz mit Retro-Laufwerk</title>
+    <!-- CSS-FRAMEWORK & RETRO-FONTS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- JSZIP ZUM DIRECT-ZIP-ENTPACKEN IM BROWSER-ARBEITSSPEICHER -->
+    <!-- JSZIP ZUM DIREKTEN ZIP-ENTPACKEN IM BROWSER-ARBEITSSPEICHER -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght=300;400;500;600;700&family=VT323&display=swap');
         
@@ -176,7 +178,7 @@
                     <div class="flex items-center justify-between">
                         <div class="flex items-center space-x-2">
                             <i class="fas fa-check-circle text-emerald-500"></i>
-                            <span><strong id="loaded-questions-count">15</strong> Fragen einsatzbereit</span>
+                            <span><strong id="loaded-questions-count">23</strong> Fragen einsatzbereit</span>
                         </div>
                         <button onclick="exportQuestionsAsJson()" class="text-blue-400 hover:text-blue-300 flex items-center space-x-1 font-semibold transition" title="Als JSON auf den Desktop herunterladen" id="btn-export-backup">
                             <i class="fas fa-download mr-1"></i> Vorlage sichern
@@ -462,7 +464,7 @@
     <!-- Footer -->
     <footer class="bg-slate-800/40 border-t border-slate-800 py-4 text-center text-xs text-slate-500">
         <div class="max-w-4xl mx-auto px-4">
-            <p id="footer-text">© 2026 IT-Umschulungs-Coach. Entwickelt für dynamisches und offline-fähiges Lernen via ZIP-Diskette am Desktop, von Alexander Rahn. <span class="block sm:inline font-mono font-bold text-blue-400 mt-1 sm:mt-0">v1.95 - Build: 18.07.2026 15:20</span></p>
+            <p id="footer-text">© 2026 IT-Umschulungs-Coach. Entwickelt für dynamisches und offline-fähiges Lernen via ZIP-Diskette am Desktop, von Alexander Rahn. <span class="block sm:inline font-mono font-bold text-blue-400 mt-1 sm:mt-0">v1.95 - Build: 18.07.2026 15:40</span></p>
         </div>
     </footer>
 
@@ -583,9 +585,7 @@
                 "question": "Welche drei IP-Subnetze (Netzadressen) werden im detaillierten Praxisbeispiel der Baum-Topologie (Folie 12) gezeigt?",
                 "options": [
                     "10.0.0.0/8, 172.16.0.0/12 und 192.168.0.0/16",
-                    "192.168.1.0/24 (Server room), 192.168.17.0/24 (Developers Office) und 192.168.18.0/24 (Testers Office)",
-                    "192.168.1.1, 192.168.17.1 und 192.168.18.1",
-                    "255.255.255.0, 255.255.0.0 und 255.0.0.0"
+                    "192.168.1.0/24 (Server room), 192.168.17.0/24 (Developers Office) und 192.168.18.0/24 (Testers Office)"
                 ],
                 "correctAnswer": 1,
                 "explanation": "In der detaillierten Netzwerk-Baum-Grafik sind genau diese drei Subnetze eingezeichnet: Das Entwickler-Büro (.17.0/24), das Tester-Büro (.18.0/24) und der geschützte Serverraum (.1.0/24)."
@@ -594,9 +594,7 @@
                 "question": "Wie werden im kabellosen/kabelgebundenen Tree-Beispiel (Folie 13) zwei geografisch getrennte Switches drahtlos gekoppelt?",
                 "options": [
                     "Über ein unterirdisches Glasfaserkabel",
-                    "Über eine drahtlose Funkbrücke ('Bridge') zwischen zwei Wi-Fi Access Points",
-                    "Über eine direkte Satellitenverbindung",
-                    "Über das öffentliche Mobilfunknetz"
+                    "Über eine drahtlose Funkbrücke ('Bridge') zwischen zwei Wi-Fi Access Points"
                 ],
                 "correctAnswer": 1,
                 "explanation": "Das Diagramm zeigt eine gestrichelte Funkstrecke namens 'Bridge' zwischen zwei Wi-Fi Access Points, um die beiden kabelgebundenen Switch-Infrastrukturen drahtlos miteinander zu verbinden."
@@ -606,8 +604,7 @@
                 "options": [
                     "Single Mesh und Multi Mesh",
                     "Physisches Mesh und Logisches Mesh",
-                    "Full Mesh (vollvermascht) und Partial Mesh (teilvermascht)",
-                    "Lokales Mesh und Globales Mesh"
+                    "Full Mesh (vollvermascht) und Partial Mesh (teilvermascht)"
                 ],
                 "correctAnswer": 2,
                 "explanation": "Die Folie stellt 'Full Mesh' (alle 6 Knoten sind mit jedem anderen Knoten direkt verbunden) und 'Partial Mesh' (Knoten sind nur teilweise redundant verbunden, um Kosten zu sparen) bildlich gegenüber."
@@ -617,8 +614,7 @@
                 "options": [
                     "6 Leitungen",
                     "12 Leitungen",
-                    "15 Leitungen",
-                    "30 Leitungen"
+                    "15 Leitungen"
                 ],
                 "correctAnswer": 2,
                 "explanation": "Die Formel zur Berechnung der Leitungen lautet: n(n - 1) / 2. Für 6 Endgeräte im Bild ergibt dies: 6(6 - 1) / 2 = 15 Leitungen."
@@ -632,7 +628,7 @@
                     "Die Art der Kabel und die Kabelanschlüsse"
                 ],
                 "correctAnswer": 0,
-                "explanation": "Laut Folie 3 erklärt die logische Topologie, wie Daten übertragen werden, welchen Weg sie nehmen und welche Protokolle verwendet werden. Kabel, Anschlüsse und Standorte gehören zur physischen Topologie."
+                "explanation": "Laut Folien erklärt die logische Topologie, wie Daten übertragen werden, welchen Weg sie nehmen und welche Protokolle verwendet werden. Kabel, Anschlüsse und Standorte gehören zur physischen Topologie."
             }
         ];
 
@@ -652,7 +648,7 @@
         let timeLeft = 30;
         let timerInterval = null;
 
-        // JSON-Template zur Veranschaulichung
+        // JSON-Templates
         const jsonTemplate = `[
   {
     "question": "Was ist die Hauptaufgabe eines Routers?",
@@ -768,10 +764,11 @@ Erklärung: Da jedes Endgerät ein exklusives Kabel zum Switch besitzt, betrifft
             }
         }
 
-        // Hauptfunktion zum Lesen und sofortigen Aktivieren der ZIP/JSON-Dateien
-        function handleFileRead(file) {
-            const isZip = file.name.endsWith('.zip');
-            if (!file.name.endsWith('.json') && !isZip) {
+        async function handleFileRead(file) {
+            const isZip = file.name.toLowerCase().endsWith('.zip');
+            const isJson = file.name.toLowerCase().endsWith('.json');
+
+            if (!isJson && !isZip) {
                 showFeedback("Fehler: Bitte wähle eine *.json oder *.zip Datei aus.", "error");
                 return;
             }
@@ -813,26 +810,39 @@ Erklärung: Da jedes Endgerät ein exklusives Kabel zum Switch besitzt, betrifft
                             let jsonContent = null;
                             const imageMap = {};
 
+                            // Files durchlaufen und system- / metadaten-clutter ausfiltern!
                             for (const [path, zipEntry] of Object.entries(zip.files)) {
                                 if (zipEntry.dir) continue;
-                                const cleanPath = path.replace(/^\.\//, ""); // "./pics/1.png" -> "pics/1.png"
+                                const cleanPath = path.replace(/^\.\//, "").toLowerCase();
+
+                                // Ignoriere macOS-Metadaten, systemclutter und unsichtbare Dateien
+                                if (cleanPath.includes('__macosx') || 
+                                    cleanPath.includes('.ds_store') || 
+                                    cleanPath.split('/').pop().startsWith('._') || 
+                                    cleanPath.split('/').pop().startsWith('.')) {
+                                    console.log(`[ZIP Loader] Ignoriere Systemdatei: ${path}`);
+                                    continue;
+                                }
 
                                 if (cleanPath.endsWith('.json')) {
                                     const text = await zipEntry.async("string");
                                     jsonContent = JSON.parse(text);
+                                    console.log(`[ZIP Loader] JSON-Datei gefunden und geparst: "${path}"`);
                                 } else if (/\.(png|jpe?g|gif|svg)$/i.test(cleanPath)) {
                                     const blob = await zipEntry.async("blob");
                                     const objectURL = URL.createObjectURL(blob);
-                                    imageMap[cleanPath] = objectURL;
                                     
-                                    // Fallback: Nur Dateiname "1.png" registrieren
+                                    // Registriere den vollen Pfad in kleinbuchstaben UND nur den Dateinamen
+                                    imageMap[cleanPath] = objectURL;
                                     const fileNameOnly = cleanPath.split('/').pop();
                                     imageMap[fileNameOnly] = objectURL;
+                                    
+                                    console.log(`[ZIP Loader] Registriere Bild: "${cleanPath}" und "${fileNameOnly}"`);
                                 }
                             }
 
                             if (!jsonContent) {
-                                throw new Error("Keine .json-Datei im ZIP-Archiv gefunden!");
+                                throw new Error("Keine gültige .json-Datei im ZIP-Archiv gefunden!");
                             }
                             if (!Array.isArray(jsonContent)) {
                                 throw new Error("Das JSON-Format im ZIP muss ein Array sein.");
@@ -840,6 +850,7 @@ Erklärung: Da jedes Endgerät ein exklusives Kabel zum Switch besitzt, betrifft
 
                             jsonContentForTextarea = jsonContent;
 
+                            // Fragen analysieren und Bilder intelligent per Fuzzy-Matching mappen
                             jsonContent.forEach((item, index) => {
                                 if (!item.question || !Array.isArray(item.options) || item.options.length < 2 || item.correctAnswer === undefined) {
                                     throw new Error(`Eintrag ${index} im ZIP-JSON unvollständig.`);
@@ -853,21 +864,33 @@ Erklärung: Da jedes Endgerät ein exklusives Kabel zum Switch besitzt, betrifft
                                 };
 
                                 if (item.image) {
-                                    const cleanImgPath = item.image.replace(/^\.\//, "");
+                                    const cleanImgPath = item.image.replace(/^\.\//, "").toLowerCase();
                                     const fileNameOnly = cleanImgPath.split('/').pop();
+
+                                    console.log(`[ZIP Loader] Suche Match für Bild: "${item.image}" (clean: "${cleanImgPath}", name: "${fileNameOnly}")`);
 
                                     if (imageMap[cleanImgPath]) {
                                         importedItem.image = imageMap[cleanImgPath];
+                                        console.log(`[ZIP Loader] -> Voller Pfad Match!`);
                                     } else if (imageMap[fileNameOnly]) {
                                         importedItem.image = imageMap[fileNameOnly];
+                                        console.log(`[ZIP Loader] -> Dateiname Match!`);
                                     } else {
-                                        importedItem.image = item.image; // Fallback URL
+                                        // Fuzzy Match: Letzter Rettungsanker (endet mit fileNameOnly)
+                                        const fuzzyKey = Object.keys(imageMap).find(k => k.endsWith(fileNameOnly));
+                                        if (fuzzyKey) {
+                                            importedItem.image = imageMap[fuzzyKey];
+                                            console.log(`[ZIP Loader] -> Fuzzy Match gefunden: "${fuzzyKey}"`);
+                                        } else {
+                                            importedItem.image = item.image; // Cloud Fallback
+                                            console.log(`[ZIP Loader] -> Kein Match im ZIP. Nutze Rohpfad.`);
+                                        }
                                     }
                                 }
                                 importedList.push(importedItem);
                             });
 
-                            showFeedback(`Diskette entpackt! ${importedList.length} Fragen & ${Object.keys(imageMap).length} Bilder geladen.`, "success");
+                            showFeedback(`Diskette entpackt! ${importedList.length} Fragen geladen.`, "success");
 
                         } else {
                             // JSON Datei direkt
@@ -895,16 +918,15 @@ Erklärung: Da jedes Endgerät ein exklusives Kabel zum Switch besitzt, betrifft
                             showFeedback(`JSON eingelesen! ${importedList.length} Fragen geladen.`, "success");
                         }
 
-                        // ---- DER "SELF-HEALING" FIX ----
-                        // Synchronisiere das geladene JSON sofort in das Textfeld, damit ein "Speichern" Klick nichts zerstört!
+                        // Textfeld updaten und synchronisieren
                         document.getElementById('import-textarea').value = JSON.stringify(jsonContentForTextarea, null, 2);
-                        switchImportTab('json', true); // Visuell auf JSON umschalten
+                        switchImportTab('json', true);
 
-                        // PLUG & PLAY: Direkt aktivieren!
+                        // Fragenliste global setzen
                         questions = importedList;
                         updateLoadedCount();
                         
-                        // Aktive Quelle auf Startseite updaten
+                        // Benutzeroberfläche direkt updaten
                         document.getElementById('active-source-indicator').innerText = `Diskette (${importedList.length} Fragen geladen)`;
                         document.getElementById('active-source-indicator').className = "text-emerald-400 font-bold";
                         document.getElementById('quiz-mode-badge').innerText = "Eigenes Set";
@@ -917,15 +939,16 @@ Erklärung: Da jedes Endgerät ein exklusives Kabel zum Switch besitzt, betrifft
                             document.getElementById('quiz-mode-badge').className = "bg-white text-black px-3 py-1.5 border border-black font-mono font-bold text-xs uppercase";
                             const led = document.getElementById('drive-led');
                             led.classList.remove('led-active');
-                            led.style.backgroundColor = '#22c55e'; // Stetig grün
+                            led.style.backgroundColor = '#22c55e';
                         }
 
-                        // Nach 1.2s das Fenster magisch schließen (Plug & Play)
+                        // Schließe das Importfenster automatisch nach erfolgreichem Einlesen
                         setTimeout(() => {
                             toggleImportPanel(false);
                         }, 1200);
 
                     } catch (err) {
+                        console.error("[ZIP Loader] Fehler beim Entpacken:", err);
                         showFeedback(`Fehler beim Lesen: ${err.message}`, "error");
                         if (currentTheme === 'retro') {
                             resetFloppyAnimation();
@@ -1053,7 +1076,6 @@ Erklärung: Da jedes Endgerät ein exklusives Kabel zum Switch besitzt, betrifft
             document.getElementById('import-feedback').classList.add('hidden');
         }
 
-        // Manuelle Code-Aktivierung (falls via Textfeld gearbeitet wird)
         function processImport() {
             const rawInput = document.getElementById('import-textarea').value.trim();
             if (!rawInput) {
@@ -1079,7 +1101,7 @@ Erklärung: Da jedes Endgerät ein exklusives Kabel zum Switch besitzt, betrifft
                             if (line.match(/^(Frage|Q):/i)) {
                                 question = line.replace(/^(Frage|Q):\s*/i, "");
                             } else if (line.match(/^[A-D]\)/i)) {
-                                options.push(line.replace(/^[A-D]\)\s*/i, ""));
+                                options.push(line.replace(/^[A-D]\)/i, ""));
                             } else if (line.match(/^(Antwort|Richtig):/i)) {
                                 const ansLetter = line.replace(/^(Antwort|Richtig):\s*/i, "").trim().toUpperCase();
                                 if (ansLetter === 'A') correctAnswer = 0;
@@ -1131,7 +1153,6 @@ Erklärung: Da jedes Endgerät ein exklusives Kabel zum Switch besitzt, betrifft
             questions = importedList;
             updateLoadedCount();
             
-            // Aktive Quelle updaten
             document.getElementById('active-source-indicator').innerText = `Manuelle Eingabe (${questions.length} Fragen geladen)`;
             document.getElementById('active-source-indicator').className = "text-amber-400 font-bold";
             document.getElementById('quiz-mode-badge').innerText = "Eigenes Set";
@@ -1524,7 +1545,7 @@ Erklärung: Da jedes Endgerät ein exklusives Kabel zum Switch besitzt, betrifft
                     resultEmojiContainer.className = "w-20 h-20 bg-blue-500/10 text-blue-500 rounded-full flex items-center justify-center mx-auto border border-blue-500/30";
                 } else {
                     performanceTag.className = "block font-mono text-xs font-bold border border-blue-600 bg-blue-100 text-blue-800 px-3 py-1";
-                    resultEmojiContainer.className = "w-16 h-16 bg-white border-2 border-black flex items-center justify-center mx-auto text-blue-850";
+                    resultEmojiContainer.className = "w-16 h-16 bg-white border-2 border-black flex items-center justify-center mx-auto text-emerald-600";
                 }
                 resultMessage.innerText = "Gute Arbeit! Die grundlegenden Netzwerk-Schaltpläne sitzen solide.";
                 resultIcon.className = "fas fa-thumbs-up text-4xl";

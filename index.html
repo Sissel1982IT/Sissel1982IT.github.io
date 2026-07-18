@@ -9,7 +9,7 @@
     <!-- JSZIP ZUM DIRECT-ZIP-ENTPACKEN IM BROWSER-ARBEITSSPEICHER -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=VT323&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght=300;400;500;600;700&family=VT323&display=swap');
         
         body {
             font-family: 'Inter', sans-serif;
@@ -798,6 +798,8 @@ Erklärung: Da jedes Endgerät ein exklusives Kabel zum Switch besitzt, betrifft
                 setTimeout(async () => {
                     try {
                         let importedList = [];
+                        let jsonContentForTextarea = null;
+
                         if (isZip) {
                             if (typeof JSZip === 'undefined') {
                                 throw new Error("JSZip-Bibliothek ist noch nicht geladen.");
@@ -831,6 +833,8 @@ Erklärung: Da jedes Endgerät ein exklusives Kabel zum Switch besitzt, betrifft
                             if (!Array.isArray(jsonContent)) {
                                 throw new Error("Das JSON-Format im ZIP muss ein Array sein.");
                             }
+
+                            jsonContentForTextarea = jsonContent;
 
                             jsonContent.forEach((item, index) => {
                                 if (!item.question || !Array.isArray(item.options) || item.options.length < 2 || item.correctAnswer === undefined) {
@@ -869,6 +873,8 @@ Erklärung: Da jedes Endgerät ein exklusives Kabel zum Switch besitzt, betrifft
                                 throw new Error("JSON muss ein Array sein.");
                             }
 
+                            jsonContentForTextarea = parsed;
+
                             parsed.forEach((item, index) => {
                                 if (!item.question || !Array.isArray(item.options) || item.options.length < 2 || item.correctAnswer === undefined) {
                                     throw new Error(`Eintrag ${index} besitzt unvollständige Felder.`);
@@ -882,9 +888,13 @@ Erklärung: Da jedes Endgerät ein exklusives Kabel zum Switch besitzt, betrifft
                                 });
                             });
 
-                            document.getElementById('import-textarea').value = content;
                             showFeedback(`JSON eingelesen! ${importedList.length} Fragen geladen.`, "success");
                         }
+
+                        // ---- DER "SELF-HEALING" FIX ----
+                        // Synchronisiere das geladene JSON sofort in das Textfeld, damit ein "Speichern" Klick nichts zerstört!
+                        document.getElementById('import-textarea').value = JSON.stringify(jsonContentForTextarea, null, 2);
+                        switchImportTab('json', true); // Visuell auf JSON umschalten
 
                         // PLUG & PLAY: Direkt aktivieren!
                         questions = importedList;
@@ -902,10 +912,10 @@ Erklärung: Da jedes Endgerät ein exklusives Kabel zum Switch besitzt, betrifft
                             led.style.backgroundColor = '#22c55e'; // Stetig grün
                         }
 
-                        // Nach 1.5s das Fenster magisch schließen (Plug & Play Feeling)
+                        // Nach 1.2s das Fenster magisch schließen (Plug & Play)
                         setTimeout(() => {
                             toggleImportPanel(false);
-                        }, 1500);
+                        }, 1200);
 
                     } catch (err) {
                         showFeedback(`Fehler beim Lesen: ${err.message}`, "error");

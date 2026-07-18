@@ -176,11 +176,15 @@
                     <div class="flex items-center justify-between">
                         <div class="flex items-center space-x-2">
                             <i class="fas fa-check-circle text-emerald-500"></i>
-                            <span><strong id="loaded-questions-count">23</strong> Fragen einsatzbereit</span>
+                            <span><strong id="loaded-questions-count">15</strong> Fragen einsatzbereit</span>
                         </div>
                         <button onclick="exportQuestionsAsJson()" class="text-blue-400 hover:text-blue-300 flex items-center space-x-1 font-semibold transition" title="Als JSON auf den Desktop herunterladen" id="btn-export-backup">
                             <i class="fas fa-download mr-1"></i> Vorlage sichern
                         </button>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <i class="fas fa-database text-blue-400"></i>
+                        <span>Datenquelle: <strong id="active-source-indicator" class="text-emerald-400">Standard-System (Offline-Modus)</strong></span>
                     </div>
                     <div class="flex items-center space-x-2">
                         <i class="fas fa-random text-emerald-500"></i>
@@ -458,12 +462,12 @@
     <!-- Footer -->
     <footer class="bg-slate-800/40 border-t border-slate-800 py-4 text-center text-xs text-slate-500">
         <div class="max-w-4xl mx-auto px-4">
-            <p id="footer-text">© 2026 IT-Umschulungs-Coach. Entwickelt für dynamisches und offline-fähiges Lernen via ZIP-Diskette am Desktop, von Alexander Rahn.</p>
+            <p id="footer-text">© 2026 IT-Umschulungs-Coach. Entwickelt für dynamisches und offline-fähiges Lernen via ZIP-Diskette am Desktop, von Alexander Rahn. <span class="block sm:inline font-mono font-bold text-blue-400 mt-1 sm:mt-0">v1.95 - Build: 18.07.2026 15:20</span></p>
         </div>
     </footer>
 
     <script>
-        // Die vollständigen 23 prüfungsrelevanten Fragen als Standard geladen
+        // Die vollständigen 15 PowerPoint-relevanten Fragen als Standard geladen
         const defaultQuestions = [
             {
                 "question": "Was unterscheidet die physische von der logischen Netzwerktopologie laut Definition der Präsentation?",
@@ -900,7 +904,11 @@ Erklärung: Da jedes Endgerät ein exklusives Kabel zum Switch besitzt, betrifft
                         questions = importedList;
                         updateLoadedCount();
                         
+                        // Aktive Quelle auf Startseite updaten
+                        document.getElementById('active-source-indicator').innerText = `Diskette (${importedList.length} Fragen geladen)`;
+                        document.getElementById('active-source-indicator').className = "text-emerald-400 font-bold";
                         document.getElementById('quiz-mode-badge').innerText = "Eigenes Set";
+                        
                         if (currentTheme === 'modern') {
                             document.getElementById('quiz-mode-badge').className = "bg-blue-600/20 text-blue-400 px-3 py-1.5 rounded-full font-medium uppercase tracking-wider border border-blue-500/20";
                             document.getElementById('upload-icon').className = "fas fa-check-circle text-3xl text-emerald-500";
@@ -926,7 +934,7 @@ Erklärung: Da jedes Endgerät ein exklusives Kabel zum Switch besitzt, betrifft
                             document.getElementById('upload-text').innerText = "Ladefehler";
                         }
                     }
-                }, currentTheme === 'retro' ? 1400 : 300);
+                }, currentTheme === 'retro' ? 1450 : 300);
             };
         }
 
@@ -1122,7 +1130,12 @@ Erklärung: Da jedes Endgerät ein exklusives Kabel zum Switch besitzt, betrifft
 
             questions = importedList;
             updateLoadedCount();
+            
+            // Aktive Quelle updaten
+            document.getElementById('active-source-indicator').innerText = `Manuelle Eingabe (${questions.length} Fragen geladen)`;
+            document.getElementById('active-source-indicator').className = "text-amber-400 font-bold";
             document.getElementById('quiz-mode-badge').innerText = "Eigenes Set";
+            
             showFeedback(`${questions.length} Fragen erfolgreich manuell geladen!`, "success");
             setTimeout(() => { toggleImportPanel(false); }, 1200);
         }

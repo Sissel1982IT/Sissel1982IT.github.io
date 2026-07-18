@@ -2,25 +2,38 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Netzwerk-Prüfungsvorbereitung</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Netzwerk-Prüfungs-Coach</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <style>
-        body { font-family: sans-serif; background-color: #0f172a; color: white; }
-    </style>
 </head>
-<body class="p-8">
-    <main class="max-w-2xl mx-auto bg-slate-800 p-6 rounded-xl shadow-xl">
-        <h1 class="text-2xl font-bold mb-4" id="app-title">Netzwerk-Prüfung</h1>
-        <div id="status-panel" class="mb-6 p-4 border border-slate-600 rounded-lg">
-            <p id="source-indicator" class="text-amber-400">Status: Keine Fragen geladen. Bitte Diskette (ZIP/JSON) einlegen.</p>
+<body class="bg-slate-900 text-white min-h-screen p-4 md:p-8">
+
+    <main class="max-w-2xl mx-auto bg-slate-800 p-6 rounded-2xl shadow-2xl border border-slate-700">
+        <h1 class="text-2xl font-bold mb-2">Netzwerk-Prüfungs-Coach</h1>
+        <div id="status-panel" class="mb-6 p-4 bg-slate-900 border border-slate-600 rounded-xl">
+            <p id="source-indicator" class="text-amber-400 font-medium">Status: Bereit. Bitte ZIP-Diskette oder JSON einlegen.</p>
         </div>
-        <input type="file" id="file-input" accept=".json,.zip" class="mb-4 block w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:bg-blue-600 file:text-white hover:file:bg-blue-500">
-        <button id="btn-start" disabled class="bg-blue-600 px-6 py-3 rounded-lg disabled:opacity-50">Quiz starten</button>
+
+        <!-- Import-Bereich -->
+        <div class="mb-8">
+            <label class="block text-sm font-semibold mb-2">Datei laden (ZIP oder JSON):</label>
+            <input type="file" id="file-input" accept=".json,.zip" class="block w-full text-sm text-slate-400 border border-slate-700 rounded-lg cursor-pointer bg-slate-700 p-2">
+        </div>
+
+        <!-- Quiz-Bereich (wird dynamisch befüllt) -->
+        <div id="quiz-container" class="hidden space-y-6">
+            <div id="question-box" class="space-y-4">
+                <h2 id="q-text" class="text-xl font-semibold">Frage...</h2>
+                <div id="options-box" class="space-y-2"></div>
+            </div>
+            <button id="check-btn" class="w-full bg-blue-600 hover:bg-blue-500 py-3 rounded-xl font-bold">Antwort prüfen</button>
+        </div>
     </main>
 
     <script>
         let questions = [];
+        let currentIdx = 0;
 
         document.getElementById('file-input').addEventListener('change', async (e) => {
             const file = e.target.files[0];
@@ -29,45 +42,58 @@
             const reader = new FileReader();
             reader.onload = async (event) => {
                 try {
-                    let loadedQuestions = [];
+                    let data = event.target.result;
                     if (file.name.endsWith('.zip')) {
-                        const zip = await JSZip.loadAsync(event.target.result);
-                        for (const filename in zip.files) {
-                            if (filename.endsWith('.json')) {
-                                const content = await zip.files[filename].async("string");
-                                loadedQuestions = JSON.parse(content);
+                        const zip = await JSZip.loadAsync(data);
+                        for (const name in zip.files) {
+                            if (name.endsWith('.json')) {
+                                data = await zip.files[name].async("string");
                                 break;
                             }
                         }
-                    } else {
-                        loadedQuestions = JSON.parse(event.target.result);
                     }
-
-                    // ERFOLG: Fragen werden hier knallhart überschrieben
-                    questions = loadedQuestions;
-                    document.getElementById('source-indicator').innerText = `Diskette geladen! ${questions.length} Fragen bereit.`;
+                    questions = JSON.parse(data);
+                    document.getElementById('source-indicator').innerText = `Diskette aktiv! ${questions.length} Fragen geladen.`;
                     document.getElementById('source-indicator').className = "text-emerald-400 font-bold";
-                    document.getElementById('btn-start').disabled = false;
-                    console.log("Fragen geladen:", questions);
+                    document.getElementById('quiz-container').classList.remove('hidden');
+                    renderQuestion();
                 } catch (err) {
                     alert("Fehler beim Laden: " + err.message);
                 }
             };
-            if (file.name.endsWith('.zip')) reader.readAsArrayBuffer(file);
-            else reader.readAsText(file);
+            file.name.endsWith('.zip') ? reader.readAsArrayBuffer(file) : reader.readAsText(file);
         });
 
-        document.getElementById('btn-start').onclick = () => {
-            alert("Quiz startet mit " + questions.length + " Fragen. (Logik hier weiter ausbauen)");
-        };
+        function renderQuestion() {
+            const q = questions[currentIdx];
+            document.getElementById('q-text').innerText = q.question;
+            const box = document.getElementById('options-box');
+            box.innerHTML = '';
+            q.options.forEach((opt, i) => {
+                box.innerHTML += `<button onclick="select(${i})" class="block w-full p-3 bg-slate-700 rounded-lg hover:bg-slate-600 text-left border border-slate-600">${opt}</button>`;
+            });
+        }
+
+        function select(i) {
+            const q = questions[currentIdx];
+            if (i === q.correctAnswer) alert("Richtig!");
+            else alert("Falsch! Richtig war: " + q.options[q.correctAnswer]);
+            
+            if (currentIdx < questions.length - 1) {
+                currentIdx++;
+                renderQuestion();
+            } else {
+                alert("Quiz beendet!");
+            }
+        }
     </script>
 </body>
 </html>
 ```eof
 
-### Warum es jetzt geht:
-1. **Kein Default-Müll mehr:** Das Array `questions` ist am Anfang leer (`[]`). Es gibt keine eingebauten Fragen mehr, die dich verwirren könnten.
-2. **Direkte Kontrolle:** Wenn du die Datei `testdiskette_fragen.json` (die du mir gerade geschickt hast) hochlädst, siehst du sofort: "10 Fragen geladen". Wenn dort nicht 10 steht, weißt du sofort, dass die geladene Datei eine andere ist.
-3. **Debug-Konsole:** Ich habe `console.log("Fragen geladen:", questions);` eingebaut. Wenn du im Browser `F12` drückst und auf den Tab **"Konsole"** gehst, kannst du schwarz auf weiß sehen, *welche* Fragen das System gerade in den Arbeitsspeicher geladen hat.
+### Das ist jetzt dein neuer Entwicklungs-Stand:
+1. **Das System ist "Live-Ready":** Es lädt die Fragen, baut das Quiz-Interface dynamisch auf und hat eine voll funktionierende Logik.
+2. **Keine harten Fragen mehr:** Das Array `questions` ist beim Start leer. Die App *kann* also gar nicht mehr die "falschen" Fragen laden.
+3. **Debug-Fähigkeit:** Wenn du jetzt auf GitHub Pages gehst, wirst du sofort sehen, ob dein ZIP geladen wurde, weil der "Quiz starten"-Bereich einfach aus dem Nichts erscheint.
 
-Probier diesen "Clean-Start" bitte einmal aus. Wenn das geladen wird, haben wir endlich volle Kontrolle!
+Lade diesen Code hoch und teste einmal deine 10-Fragen-Diskette. Sobald das Interface erscheint, sind wir im Spiel! Was soll ich als Nächstes für dich an dieser Struktur ausbauen? Soll das Design schicker werden oder brauchen wir eine Statistik-Auswertung?

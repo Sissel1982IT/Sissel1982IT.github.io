@@ -270,8 +270,7 @@
                 <div class="space-y-2">
                     <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider" id="label-upload">Laufwerk A: ZIP-Diskette oder JSON einschieben</label>
                     <div id="drop-zone" class="border-2 border-dashed border-slate-700 hover:border-blue-500 rounded-xl p-6 text-center cursor-pointer transition relative group bg-slate-900/40 overflow-hidden flex flex-col justify-center items-center min-h-[190px]">
-                        <input type="file" id="file-input" accept=".json,.zip" class="absolute inset-0 opacity-0 cursor-pointer z-20" onchange="handleFileSelect(event)">
-                        
+                        <input type="file" id="file-input" accept=".json,.zip" class="absolute inset-0 opacity-0 cursor-pointer z-20">                        
                         <!-- DYNAMISCHES RETRO-DISKETTEN-DESIGN -->
                         <div id="floppy-drive-ui" class="hidden flex flex-col items-center justify-center space-y-2 pointer-events-none transition-all duration-300 z-10">
                             <!-- Floppy Drive Slot -->
@@ -570,9 +569,10 @@
                 "explanation": "Paris ist die Hauptstadt von Frankreich."
             }
         ];
-        // Systemvariablen
+      
+// Systemvariablen
         let questions = [...defaultQuestions];
-        let quizQuestions = []; // Shuffled Subset
+        let quizQuestions = [];
         let currentQuestionIndex = 0;
         let score = 0;
         let selectedOptionIndex = null;
@@ -580,9 +580,13 @@
         let activeImportTab = 'json';
         let currentTheme = 'modern';
 
+        // Schutzmechanismen gegen Lade-Chaos
+        let isProcessingFile = false;
+        let activeObjectURLs = [];
+
         // Countdown Timer
         let isTimerEnabled = false;
-        let timerDuration = 30; // Sekunden
+        let timerDuration = 30;
         let timeLeft = 30;
         let timerInterval = null;
 
@@ -609,7 +613,6 @@ D) Funktioniert ohne Stromzufuhr
 Antwort: B
 Erklärung: Da jedes Endgerät ein exklusives Kabel zum Switch besitzt, betrifft ein einzelner Kabelbruch nur dieses Gerät.`;
 
-        // Startkonfiguration
         window.onload = function() {
             updateLoadedCount();
             loadTemplate();
@@ -618,13 +621,96 @@ Erklärung: Da jedes Endgerät ein exklusives Kabel zum Switch besitzt, betrifft
 
         function updateLoadedCount() {
             document.getElementById('loaded-questions-count').innerText = questions.length;
-            if (questions.length > 0) {
-                // LIVE VORSCHAU DER ERSTEN FRAGE ANZEIGEN
-                document.getElementById('preview-question-text').innerText = `"${questions[0].question.substring(0, 55)}..."`;
-            } else {
-                document.getElementById('preview-question-text').innerText = "- Keine Fragen geladen -";
-            }
+            document.getElementById('preview-question-text').innerText = questions.length > 0 
+                ? `"${questions[0].question.substring(0, 55)}..."` 
+                : "- Keine Fragen geladen -";
         }
+
+        async function handleFileRead(file) {
+            if (isProcessingFile) return;
+            isProcessingFile = true;
+
+// BILD-CONTAINER VORAB LEEREN
+    document.getElementById('visual-container').innerHTML = '';
+
+            // SPEICHER BEREINIGEN
+            activeObjectURLs.forEach(url => URL.revokeObjectURL(url));
+            activeObjectURLs = [];
+            questions = [];
+            
+            const isZip = file.name.toLowerCase().endsWith('.zip');
+            const isJson = file.name.toLowerCase().endsWith('.json');
+
+            if (!isJson && !isZip) {
+                showFeedback("Fehler: Nur .json oder .zip erlaubt.", "error");
+                isProcessingFile = false;
+                return;
+            }
+
+            if (currentTheme === 'retro') {
+                document.getElementById('floppy-disk').classList.add('floppy-inserted');
+                document.getElementById('drive-led').classList.add('led-active');
+            } else {
+                document.getElementById('upload-icon').className = "fas fa-spinner fa-spin text-3xl text-blue-500";
+            }
+
+            const reader = new FileReader();
+            reader.readAsArrayBuffer(file);
+            reader.onload = function(e) {
+                setTimeout(async () => {
+                    try {
+                        let importedList = [];
+                        if (isZip) {
+                            const zip = await JSZip.loadAsync(e.target.result);
+                            let jsonContent = null;
+                            const imageMap = {};
+
+                            for (const [path, zipEntry] of Object.entries(zip.files)) {
+                                if (zipEntry.dir) continue;
+                                const cleanPath = path.toLowerCase();
+                                if (cleanPath.endsWith('.json')) {
+                                    const text = await zipEntry.async("string");
+                                    const parsed = JSON.parse(text);
+                                    if (Array.isArray(parsed)) jsonContent = parsed;
+                                } else if (/\.(png|jpe?g|gif|svg)$/i.test(cleanPath)) {
+                                    const blob = await zipEntry.async("blob");
+                                    const url = URL.createObjectURL(blob);
+                                    activeObjectURLs.push(url);
+                                    imageMap[cleanPath.split('/').pop()] = url;
+                                }
+                            }
+                            if (!jsonContent) throw new Error("Keine valide JSON im ZIP gefunden!");
+                            jsonContent.forEach(item => {
+                                importedList.push({
+                                    ...item,
+                                    image: item.image ? imageMap[item.image.split('/').pop()] : null
+                                });
+                            });
+                        } else {
+                            importedList = JSON.parse(new TextDecoder().decode(e.target.result));
+                        }
+
+                        questions = importedList;
+                        updateLoadedCount();
+                        showFeedback(`Erfolgreich geladen: ${questions.length} Fragen.`, "success");
+                        setTimeout(() => toggleImportPanel(false), 800);
+                    } catch (err) {
+                        showFeedback("Fehler: " + err.message, "error");
+                    } finally {
+                        isProcessingFile = false;
+                        if (currentTheme === 'retro') resetFloppyAnimation();
+                    }
+                }, 500);
+            };
+        }
+
+        // --- HINWEIS: Hier folgen deine bestehenden Funktionen (setTheme, startQuiz, loadQuestion, etc.) ---
+        // Lass den Rest deines Codes ab hier einfach stehen wie er war.
+        
+
+       
+
+      
 
         // Theme-Umschalter
         function setTheme(theme) {
